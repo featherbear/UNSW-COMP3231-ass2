@@ -44,44 +44,54 @@ int sys_read(int, void *, size_t buflen, *int);
    If not, need to change all of the
 
 */
-int sys_open((userptr_t)filename, int flags, mode_t mode, &retval) { 
+int sys_open((userptr_t)filename, int flags, mode_t mode, int *retval) { 
     
     // Get the File Descriptor Table from process and allocate it on the FD_TABLE
     int *map = curproc->p_fdtable->map; 
-    int new_fd_index = get_free_fd(); 
-    if (map[new_fd_index] != -1) { 
+    
+    int fd;
+    if ((*retval = get_free_fd(&fd)) != 0) {
         kprint("Error with function: get_free_fd()\n"); 
-        retval = ENOSYS
         return -1;
     } 
     
+    // TODO: Should be in another function //
+
     // Allocate the file on the OF_TABLE 
-    int new_of_index = get_free_fd();  
-    if (open_file_table[new_of_index] == NULL) {
+    int of;
+    
+    if ((*retval = get_free_of(&of)) != 0) {
         print("Error with function: get_free_of()\n"); 
-        retval = ENOSYS 
         return -1; 
     } 
     
     
-    // Set the vnode for the open file
-    struct vnode *new_vnode = malloc(sizeof(vnode)); 
-    int e = vfs_open(); // TODO: Don't know if this line is correct. 
+    // // Set the vnode for the open file
+    // struct vnode *new_vnode = malloc(sizeof(vnode)); 
+    // int e = vfs_open(); // TODO: Don't know if this line is correct. 
+    //                         // Absolutely not (:
+
+
+    struct vnode *vnode;
+    int e = vfs_open(..., &vnode);
+                            
 
 
     // Setup new open_file 
-    struct open_file *new_file = malloc(sizeof(open_file)); 
-    new_file->fp = new_fd_index; 
-    new_file->flags = flags 
-    new_file->vnode = new_vnode;  
-    
+    struct open_file *new_file = malloc(sizeof(struct open_file));  // TODO: Change to kmalloc
+    new_file->fp = fd; 
+    new_file->flags = flags;
+    new_file->vnode = vnode;
+
+
+    new_file->lock = lock_create("file lock");
     /* 
         TODO: Create a lock for the file
         "struct lock *lock;   // Shared access "
     */
 
     // Success     
-    return new_fd_index; 
+    return fd;
     
 } 
 
@@ -138,7 +148,7 @@ struct file_descriptor_table *create_file_table() {
         KASSERT(0);
     }
 
-    struct file_descriptor_table *fdtable = kmalloc(sizeof(fdtable));
+    struct file_descriptor_table *fdtable = kmalloc(sizeof(struct file_descriptor_table));
 
     fdtable->map[0] = STDIN_FILENO;
     fdtable->map[1] = STDOUT_FILENO;
@@ -160,38 +170,42 @@ void destroy_file_table() {
 }
 
 
-int get_free_fd() {
+int get_free_fd(int *retval) {
     struct file_descriptor_table *table = curproc->p_fdtable;
 
     int *map = table->map;    
-    int retVal = table->next_fd;
+    int free_fd = table->next_fd;
 
-    if (retVal == -1) {
-        return EMFILE;
+    if (free_fd == -1) {
+        *retval = EMFILE;
+        return -1;
     }
 
     // Check for the next free file pointer
-    int next_fd = retVal;
+    int next_fd = free_fd;
     do next_fd = (next_fd + 1) % OPEN_MAX;
-    while (map[next_fd] != -1 && next_fd != retVal) ; // TODO: +1?
+    while (map[next_fd] != -1 && next_fd != free_fd) ; // TODO: +1?
     
-    table->next_fd = (next_fd == retVal) ? -1 : next_fd;
-    return retVal;
+    table->next_fd = (next_fd == free_fd) ? -1 : next_fd;
+    *retval = free_fd;
+    return 0;
 }
 
 /* #endregion */
 
 /* #region OF Layer */
 
-void create_open_file_table() {
+int create_open_file_table() {
     if (open_file_table != NULL) {
-        KASSERT(0);
+        return ENOSYS;
     } 
     
     open_file_table = kmalloc(sizeof(struct open_file) * OPEN_MAX);
     if (open_file_table == NULL) {
         return ENOMEM;
     }
+
+    return 0;
 }
 
 void destroy_open_file_table();
@@ -202,7 +216,7 @@ void destroy_open_file_table();
 
 int get_open_file_from_fd(int fd, struct open_file **open_file) {
 
-    // Get the File Descriptor Table from process struct file_descriptor_table *fdtable = curproc->p_fdtable;
+    struct file_descriptor_table *fdtable = curproc->p_fdtable;
     int *map = fdtable->map; 
 
     int OF_index = fdtable->map[fd];

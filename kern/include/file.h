@@ -9,21 +9,8 @@
  * Contains some file-related maximum length constants
  */
 #include <limits.h>
+#include <types.h>
 #include <synch.h> // for P(), V(), sem_* 
-
-/*  FROM limits.h
-#define NAME_MAX        __NAME_MAX
-#define PATH_MAX        __PATH_MAX
-#define ARG_MAX         __ARG_MAX
-#define PID_MIN         __PID_MIN
-#define PID_MAX         __PID_MAX
-#define PIPE_BUF        __PIPE_BUF
-#define NGROUPS_MAX     __NGROUPS_MAX
-#define LOGIN_NAME_MAX  __LOGIN_NAME_MAX
-#define OPEN_MAX        __OPEN_MAX
-#define IOV_MAX         __IOV_MAX
-
-*/
 
 /* #region FD Layer */
 
@@ -41,9 +28,9 @@ struct file_descriptor_table
 };
 
 /* Calculate the next free fd */
-int get_free_fd(void);
+int get_free_fd(int *retval);
 
-/* Close a fd */
+/* TODO: Close a fd */
 void fd_close(int fd);
 
 /* Creates and links FD table to the current process */
@@ -64,8 +51,7 @@ void destroy_file_table(void);
 // Ehh. HAHA
 
 /* File entry in the Open File table */
-struct open_file
-{
+struct open_file {
     int fp;              // File
     int flags;           // Access flags
     struct vnode *vnode; // Pointer to the VFS node
@@ -75,12 +61,13 @@ struct open_file
 struct open_file *open_file_table = NULL; // Define our global value here
 
 /* Initialise the global open file table */
-void create_open_file_table(void);
+int create_open_file_table(void);
 
 /* Destroy the global open file table */
 void destroy_open_file_table(void);
 
-int get_free_of(void);
+int get_free_of(int *retval);
+
 /* #endregion */
 
 /* #region File Helpers */
@@ -98,6 +85,18 @@ int get_open_file_from_fd(int fd, struct open_file **open_file);
 
 /* #region File Operations */
 
+// TODO: Populate the other prototypes
+
+int sys_open(userptr_t filename, int flags, mode_t mode, int *retval);
+
+// int sys_close(int, *int); 
+
+// ssize_t read(int fd, void *buf, size_t buflen);
+// int sys_read(int, void *, size_t buflen, *int); 
+
+// int sys_write(*int); 
+// int sys_lseek(*int); 
+// int sys_dup2(*int); 
 /* #endregion */
 
 #endif /* _FILE_H_ */

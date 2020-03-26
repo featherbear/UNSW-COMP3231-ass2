@@ -106,7 +106,6 @@ struct thread {
 	 * Public fields
 	 */
 
-	/* add more here as needed */
 };
 
 /*

@@ -109,8 +109,33 @@ syscall(struct trapframe *tf)
 				 (userptr_t)tf->tf_a1);
 		break;
 
-	    /* Add stuff here */
+		// TODO: Fill in the switch cases as we go 
+		case SYS_open: 
+			err = sys_open((userptr_t)tf->tf_a0, tf->tf_a1, tf->tf_a2, &retval); 
+		break; 
 
+		case SYS_close: 
+			err = sys_close(tf->tf_a0, &retval); 
+		break; 
+
+		case SYS_read:  
+			err = sys_read(tf->tf_a0, (userptr_t)tf->tf_a1, tf->tf_a2, &retval); 
+		break;
+
+		case SYS_write: 
+			err = sys_write(tf->tf_a0, (userptr_t)tf->tf_a1, tf->tf_a2, &retval); 
+		break;
+
+		case SYS_dup2: 
+			err = sys_dup2(tf->tf_a0, tf->tf_a1, &retval); 
+		break; 
+
+		case SYS_lseek: 
+			// TODO: The third argument "WHENCE" is stored on the stack, not sure how to get it. 
+			// err = sys_lseek(tf->tf_a0, tf->tf_a2, tf->tf_a3,  &retval); 
+		break; 
+
+		case 
 	    default:
 		kprintf("Unknown syscall %d\n", callno);
 		err = ENOSYS;

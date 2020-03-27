@@ -112,9 +112,9 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     } 
 
     // Prepare the uio 
-    struct iovev new_iov; // TODO: What's this?
+    struct iovec new_iov;
     struct uio *new_uio; 
-                                              // v TODO: Should this be file->fp chang
+
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
     
     if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) return -1; 
@@ -138,7 +138,7 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     }
 
     // Copy data from User-land into Kernel-land 
-    char *kernel_buf = malloc(sizeof(buflen)); // FIXME: kmalloc
+    char *kernel_buf = kmalloc(sizeof(buflen));
     if ((*errno = copyin(buf, kernel_buf, sizeof(kernel_buf)) != 0) return -1; 
 
     // Prepare the uio 
@@ -148,20 +148,15 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
     FILE_LOCK_AQCUIRE() 
     if ((*errno = VOP_WRITE(f->vnode, &new_uio)) != 0) { 
+        
+        // Covers the case where no free space is left on the file (ENOSPC) 
         FILE_LOCK_RELEASE()
         return -1;     
     } 
 
-
-
-    /* 
-        TODO:  ENOSPC --> No free space remaining on the filesystem 
-        containing the file.. 
-        How should we implement this. 
-    */ 
-
-    file->
+    file->offset += sizeof(kernel_buf); 
     FILE_LOCK_RELEASE()
+    
     // Success
     return 0 
 }
@@ -179,16 +174,35 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
     }
 
     struct open_file *open_file = get_open_file_from_fd(fd);
-    off_t curPos = open_file->fp;
+
+    if (!VOP_ISSEEKABLE(open_file->vnode)) {
+        *errno = ESPIPE;
+        return -1;
+    }
+
+    off_t curPos = open_file->offset;
     off_t newPos;
 
-    if (whence == SEEK_SET) {
-        newPos = pos;
-    } else if (whence == SEEK_CUR) {
-        newPos = curPos + pos; 
-    } else {
-
+    switch (whence) {
+        case SEEK_SET:
+            newPos = pos;
+            break;
+        case SEEK_CUR:
+            newPos = curPos + pos; 
+            break;
+        case SEEK_END:
+            newPos = VOP_STAT(open_file->vnode) + pos;
+            break;
     }
+
+    if (newPos < 0) {
+        *errno = EINVAL;
+        return -1;
+    }
+
+    open_file->offset = newPos;
+    
+    return newPos;
     
 }
 

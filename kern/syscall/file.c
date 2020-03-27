@@ -107,11 +107,16 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // Prepare the uio 
     struct iovec new_iov;
     struct uio new_uio; 
+    // FIXME: Kernel-level / User-level 
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
     
-    if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) return -1; 
+    lock_acquire(file->lock); 
+    if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) { 
+        lock_release(file->lock); 
+        return -1; 
+    } 
 
-    // Success
+    lock_release(file->lock); 
     return 0;     
 }
 
@@ -136,6 +141,13 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // Prepare the uio 
     struct iovec new_iov; 
     struct uio new_uio; 
+
+struct iovec *iov, 
+        struct iou *u, 
+        userptr_t buf, 
+        size_t len, 
+        off_t offset, 
+        enum uio_rw rw
     uio_init(&new_iov, &new_uio, buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
 
     lock_acquire(file->lock);
@@ -143,12 +155,14 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
         // Covers the case where no free space is left on the file (ENOSPC) 
         lock_release(file->lock);
+        kfree(kernel_buf);
+        // :( )
         return -1;     
     }
     file->offset += sizeof(kernel_buf); 
     lock_release(file->lock);
-    // Success
-    return 0 
+
+    return 0;
 }
 
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
@@ -213,7 +227,6 @@ struct file_descriptor_table *create_file_table() {
     fdtable->map[1] = STDOUT_FILENO;
     fdtable->map[2] = STDERR_FILENO;
     fdtable->next_fd = 3; // 0, 1, 2 are used for STDIN, STDOUT, STDERR
-    // TODO: Assignment call
     // TODO: Create FD->OF->STDIO
 
     return fdtable;
@@ -342,6 +355,8 @@ int create_open_file_table() {
     open_file_table->head = NULL;
     open_file_table->tail = NULL;
 
+
+    // TODO: Create OF nodes for STDIN, STDOUT, STDERR
     return 0;
 }
 

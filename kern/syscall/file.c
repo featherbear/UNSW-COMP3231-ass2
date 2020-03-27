@@ -22,10 +22,9 @@
  * Return ENOSYS for any possible coding errors for debugging purposes.
 */
 
-int sys_open(userptr_t filename, int flags, mode_t mode, int *retval) { 
+fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) { 
     
-
-    int fd;
+    fd_t fd;
     if ((*retval = get_free_fd(&fd)) != 0) {
         kprint("Error with function: get_free_fd()\n"); 
         return -1;
@@ -36,33 +35,20 @@ int sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
     // TODO: Assign the OD
 
     // Allocate the file on the OF_TABLE 
-    int of;
+    struct open_file *open_file = create_open_file();
     
-    if ((*retval = get_free_of(&of)) != 0) {
-        print("Error with function: get_free_of()\n"); 
-        return -1; 
-    } 
-    
-    
-    // // Set the vnode for the open file
-    struct vnode *vnode; 
-    if ((*retval = vfs_open(filename, flags, mode, &new_vnode))) { 
+    if ((*retval = vfs_open(filename, flags, mode, &open_file->vnode))) { 
         return -1;  
     }
 
-    // Setup new open_file 
-    struct open_file *new_file = kmalloc(sizeof(*new_file));
-    new_file->fp = 0; 
-    new_file->flags = flags;
-    new_file->vnode = vnode;
-    new_file->lock = lock_create("file lock");
+    open_file->fp = 0;
+    open_file->flags = flags;
 
-    // Success     
     return fd;
     
 } 
 /* #region sys_close */
-int sys_close(int fd, *retval) { 
+int sys_close(fd_t fd, *retval) { 
     
     // Get the file 
     struct open_file *file; 
@@ -96,7 +82,7 @@ int sys_close(int fd, *retval) {
 }
 /* #endregion */
 
-int sys_read(int fd, userptr_t buf, int buflen, int *retval) { 
+int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) { 
     
     int e;
 
@@ -153,7 +139,7 @@ int sys_read(int fd, userptr_t buf, int buflen, int *retval) {
     return 0;     
 }
 
-int sys_write(int fd, userptr_t buf, size_t buflen, int *retval) {  
+int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *retval) {  
     
     // Get the file 
     struct open_file *file; 
@@ -246,12 +232,15 @@ void destroy_file_table() {
     curproc->p_fdtable = NULL;
 }
 
+void assign_fd(int fd) {
+    
+}
 
-int get_free_fd(int *retval) {
+fd_t get_free_fd(int *retval) {
     struct file_descriptor_table *table = curproc->p_fdtable;
 
     int *map = table->map;    
-    int free_fd = table->next_fd;
+    fd_t free_fd = table->next_fd;
 
     if (free_fd == -1) {
         *retval = EMFILE;
@@ -259,7 +248,7 @@ int get_free_fd(int *retval) {
     }
 
     // Check for the next free file pointer
-    int next_fd = free_fd;
+    fd_t next_fd = free_fd;
     do next_fd = (next_fd + 1) % OPEN_MAX;
     while (map[next_fd] != -1 && next_fd != free_fd) ; // TODO: +1?
     
@@ -359,7 +348,7 @@ void destroy_open_file_table() {
 
 /* #region File Helpers */
 
-int get_open_file_from_fd(int fd, struct open_file **open_file) {
+int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
 

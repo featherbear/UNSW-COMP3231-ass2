@@ -153,7 +153,6 @@ int sys_read(int fd, userptr_t buf, int buflen, int *retval) {
     return 0;     
 }
 
-// TODO: Write a prototype in file.h
 int sys_write(int fd, userptr_t buf, size_t buflen, int *retval) {  
     
     // Get the file 
@@ -223,12 +222,15 @@ struct file_descriptor_table *create_file_table() {
         KASSERT(0);
     }
 
-    struct file_descriptor_table *fdtable = kmalloc(sizeof(struct file_descriptor_table));
+    struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
 
     fdtable->map[0] = STDIN_FILENO;
     fdtable->map[1] = STDOUT_FILENO;
     fdtable->map[2] = STDERR_FILENO;
     fdtable->next_fd = 3; // 0, 1, 2 are used for STDIN, STDOUT, STDERR
+
+    // TODO: Assignment call
+    // TODO: Create FD->OF->STDIO
 
     curproc->p_fdtable = fdtable;
     
@@ -282,7 +284,7 @@ struct open_file_node {
     struct open_file *entry;
 }
 
-struct open_file_node *__create_open_file_node() {
+static struct open_file_node *__create_open_file_node() {
     struct open_file_node *open_file_node = kmalloc(sizeof(*open_file_node));
     if (open_file_node == NULL) {
         KASSERT(0);
@@ -294,7 +296,7 @@ struct open_file_node *__create_open_file_node() {
 
     spinlock_acquire(&open_file_table->lock);
     if (open_file_table->head == NULL) {
-        open_file_table->head = open_file_table->tail = open_file_node
+        open_file_table->head = open_file_table->tail = open_file_node;
     } else {
         open_file_node->prev = open_file_table->tail;
         if (open_file_table->tail != NULL) open_file_table->tail->next = open_file_node;
@@ -305,7 +307,7 @@ struct open_file_node *__create_open_file_node() {
     return open_file_node;
 }
 
-struct open_file *allocate_open_file() {
+static struct open_file *__allocate_open_file() {
     struct open_file *open_file = kmalloc(sizeof(*open_file));
     if (open_file == NULL) {
         KASSERT(0);
@@ -319,10 +321,13 @@ struct open_file *allocate_open_file() {
 }
 
 struct open_file *create_open_file() {
-    struct open_file *open_file = create_open_file();
+    struct open_file_node *open_file_node = __create_open_file_node();
+    struct open_file *open_file = __allocate_open_file();
+
     open_file_node->entry = open_file;
     open_file->reference = open_file_node;
 
+    return open_file;
 }
 
 
@@ -331,7 +336,7 @@ int create_open_file_table() {
         return ENOSYS;
     } 
     
-    open_file_table = kmalloc(sizeof(struct open_file_table))
+    open_file_table = kmalloc(sizeof(struct open_file_table));
     if (open_file_table == NULL) {
         return ENOMEM;
     }
@@ -346,7 +351,7 @@ int create_open_file_table() {
 void destroy_open_file_table() {
     // TODO: Should we free the nodes?
     KASSERT(open_file_table->head == NULL && open_file_table->tail == NULL);
-    spinlock_cleanup(&open_file_table->lock)
+    spinlock_cleanup(&open_file_table->lock);
     kfree(open_file_table);
 }
 
@@ -358,20 +363,10 @@ int get_open_file_from_fd(int fd, struct open_file **open_file) {
 
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
 
-    int OF_index = fdtable->map[fd];
-    if (OF_index == -1) {
-        return ENOSYS;
-    }
-    if (OF_index >= OPEN_MAX) {
+    if (fd >= OPEN_MAX || (*open_file = fdtable->map[fd]) == NULL) {
         return EBADF;
     }
 
-    struct open_file *file = &open_file_table[OF_index];
-    if (file == NULL) {
-        return ENOSYS;
-    }
-    
-    *open_file = file;
     return 0;
 }
 

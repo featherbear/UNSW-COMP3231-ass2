@@ -95,7 +95,7 @@ int sys_close(int fd, *retval) {
 }
 /* #endregion */
 
-int sys_read(int fd, (userptr_t)buffer, int bufflen, int *retval) { 
+int sys_read(int fd, userptr_t buf, int buflen, int *retval) { 
     
     int e;
 
@@ -118,10 +118,12 @@ int sys_read(int fd, (userptr_t)buffer, int bufflen, int *retval) {
 
     // Prepare the uio 
     struct uio *new_uio; 
+    
 
     // TODO: Write this helper function (also need to declare it in file.h)
     struct *uio uio_init() { 
-        struct uio *new_uio = kmalloc(sizeof(*uio));  
+        struct uio *new_uio = kmalloc(sizeof(*uio)); 
+
         // fill in the uio details 
     }
     
@@ -137,7 +139,7 @@ int sys_read(int fd, (userptr_t)buffer, int bufflen, int *retval) {
 }
 
 // TODO: Write a prototype in file.h
-int sys_write(int fd, (userptr_t)buf, int buflen, &retval) {  
+int sys_write(int fd, userptr_t buf, size_t buflen, int *retval) {  
     
     // Get the file 
     struct open_file *file; 
@@ -149,18 +151,28 @@ int sys_write(int fd, (userptr_t)buf, int buflen, &retval) {
 
     // Check if we have the permission 
     int flags = file->flags; 
+
     if !(flags == O_WRONLY || flags == O_RDWR) {
         *retval = EPERM; 
         return -1; 
     }
 
-    /*  TODO:
-        Error: EFAULT  
-        Part or all of the address space pointed to 
-        by buf is invalid. 
-        Implement this error using uio (?) 
-        Or copyinstr() 
-    */ 
+    // Copy in the data from User-land into Kernel-land 
+    char kernel_buf[buflen];
+
+    e = copyin(buf, kernel_buf, sizeof(kernel_buf)); 
+    if (e) {  
+
+        // Handles potential EFAULT (Address error of buf ptr)
+        *retval = e; 
+        return -1; 
+    } 
+
+    uio_init()
+
+    // TODO: Acquire the file lock before we start changing it 
+
+
 
 
     /* 

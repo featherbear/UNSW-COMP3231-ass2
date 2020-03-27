@@ -295,9 +295,13 @@ struct open_file_node *create_open_file_node() {
     open_file->reference = open_file_node;
 
     spinlock_acquire(&open_file_table->lock);
-    open_file_node->prev = open_file_table->tail;
-    open_file_table->tail->next = open_file_node;
-    open_file_table->tail = open_file_node;
+    if (open_file_table->head == NULL) {
+        open_file_table->head = open_file_table->tail = open_file_node
+    } else {
+        open_file_node->prev = open_file_table->tail;
+        if (open_file_table->tail != NULL) open_file_table->tail->next = open_file_node;
+        open_file_table->tail = open_file_node;
+    }
     spinlock_release(&open_file_table->lock);
 }
 
@@ -334,6 +338,7 @@ int create_open_file_table() {
 
 void destroy_open_file_table() {
     // TODO: Should we free the nodes?
+    KASSERT(open_file_table->head == NULL && open_file_table->tail == NULL);
     spinlock_cleanup(&open_file_table->lock)
     kfree(open_file_table);
 }

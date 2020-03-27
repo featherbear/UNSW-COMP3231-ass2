@@ -16,6 +16,10 @@
 #include <syscall.h>
 #include <copyinout.h>
 
+#define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
+#define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
+#define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
+#define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
 
 /* 
  * Return ENOSYS for any possible coding errors for debugging purposes.
@@ -44,10 +48,6 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
     
 }
 
-#define FD_LOCK_ACQUIRE (spinlock_acquire(&curproc->p_fdtable->lock))
-#define FD_LOCK_RELEASE (spinlock_release(&curproc->p_fdtable->lock))
-#define OF_LOCK_ACQUIRE (spinlock_acquire(&open_file_table->lock))
-#define OF_LOCK_RELEASE (spinlock_release(&open_file_table->lock))
 
 /* #region sys_close */
 int sys_close(fd_t fd, *retval) { 
@@ -64,21 +64,22 @@ int sys_close(fd_t fd, *retval) {
         return -1; 
     }
 
-    FD_LOCK_ACQUIRE;
+    FD_LOCK_ACQUIRE();
     assign_fd(fd, NULL);
 
     // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
-    FD_LOCK_RELEASE;
+    FD_LOCK_RELEASE();
 
     // Check other references to the vnode - remove from OF table if all references have finished.
-    OF_LOCK_ACQUIRE;
+    OF_LOCK_ACQUIRE();
+    // TODO:
     // Destroy node
     // Destroy DLL linked list
     // // Move prev and next ptrs
-    OF_LOCK_RELEASE;
+    OF_LOCK_RELEASE();
 
 
     // Success 
@@ -246,24 +247,30 @@ void assign_fd(fd_t fd, struct open_file *open_file) {
     spinlock_release(&fdtable->lock);
 }
 
-fd_t get_free_fd(int *retval) {
+int get_free_fd(int *retval) {
     struct file_descriptor_table *table = curproc->p_fdtable;
 
     int *map = table->map;    
+
+    FD_LOCK_ACQUIRE();
     fd_t free_fd = table->next_fd;
 
     if (free_fd == -1) {
         *retval = EMFILE;
+        FD_LOCK_RELEASE();
         return -1;
     }
 
     // Check for the next free file pointer
     fd_t next_fd = free_fd;
     do next_fd = (next_fd + 1) % OPEN_MAX;
-    while (map[next_fd] != -1 && next_fd != free_fd) ; // TODO: +1?
+    while (map[next_fd] != -1 && next_fd != free_fd) ; // FIXME: +1?
     
     table->next_fd = (next_fd == free_fd) ? -1 : next_fd;
     *retval = free_fd;
+
+    FD_LOCK_RELEASE();
+
     return 0;
 }
 
@@ -293,7 +300,8 @@ static struct open_file_node *__create_open_file_node() {
     open_file_node->next = NULL;
     open_file_node->entry = NULL;
 
-    spinlock_acquire(&open_file_table->lock);
+    OF_LOCK_ACQUIRE();
+
     if (open_file_table->head == NULL) {
         open_file_table->head = open_file_table->tail = open_file_node;
     } else {
@@ -301,7 +309,8 @@ static struct open_file_node *__create_open_file_node() {
         if (open_file_table->tail != NULL) open_file_table->tail->next = open_file_node;
         open_file_table->tail = open_file_node;
     }
-    spinlock_release(&open_file_table->lock);
+
+    OF_LOCK_RELEASE();
 
     return open_file_node;
 }

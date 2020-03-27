@@ -290,7 +290,9 @@ struct open_file_node *create_open_file_node() {
     open_file_node->prev = NULL;
     open_file_node->next = NULL;
 
-
+    struct open_file *entry = create_open_file();
+    open_file_node->entry = entry;
+    entry->reference = open_file_node;
 
     spinlock_acquire(&open_file_table->lock);
     open_file_table->tail
@@ -307,14 +309,7 @@ struct open_file *create_open_file() {
     open_file->vnode = NULL;
     open_file->lock = lock_create("File lock")
 
-/*
-struct open_file {
-    int flags;           // Access flags
-    struct vnode *vnode; // Pointer to the VFS node
-    struct lock *lock;   // Shared access 
-    void *reference;     // Reference to the open_file_node ADT
-};
-*/
+    return open_file;
 }
 
 

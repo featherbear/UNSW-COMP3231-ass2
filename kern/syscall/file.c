@@ -152,15 +152,17 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *retval) {
     int flags = file->flags; 
 
     // FIXME:         O_APPEND	Open the file in append mode.
+
     // #define MATCH_BITMASK(value, mask) (value & mask == mask)
-    // MATCH_BITMASK(flags, O_WRONLY)
+    // if (MATCH_BITMASK(flags, O_WRONLY) || MATCH_BITMASK(flags, O_RDWR) || MATCH_BITMASK(flags, O_APPEND)) {}
+    
     if !(flags == O_WRONLY || flags == O_RDWR) {
         *retval = EPERM; 
         return -1; 
     }
 
     // Copy in the data from User-land into Kernel-land 
-    char kernel_buf[buflen];
+    char kernel_buf[buflen]; // FIXME: Awhhh you wish you could do this
 
     e = copyin(buf, kernel_buf, sizeof(kernel_buf)); 
     if (e) {  

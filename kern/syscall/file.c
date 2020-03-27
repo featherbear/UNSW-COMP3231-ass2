@@ -34,8 +34,8 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     struct open_file *open_file = create_open_file();
     if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) return -1;  
     
-    // open_file->offset = 0;
-    // TODO: Possible :: open_file->offset = MATCH_BITMASK(flags, O_APPEND) ? VOP_STAT(open_file->vnode) : 0;
+    // If set to O_APPEND, set ptr to end, otherwise set to 0 
+    open_file->offset = MATCH_BITMASK(flags, O_APPEND) ? VOP_STAT(open_file->vnode) : 0;
 
     open_file->flags = flags;
 
@@ -63,16 +63,22 @@ int sys_close(fd_t fd, *errno) {
     }
     FD_LOCK_RELEASE();
 
-    // TODO: Check other references to the vnode - remove from OF table if all references have finished.
 
+    /*
     OF_LOCK_ACQUIRE();
-    struct open_file *p = file->prev; 
-    struct open_file *n = file->next; 
+    // TODO: Check other references to the vnode - remove from OF table if all references have finished.
+    // only if reference count is 0 - which technically we haven't even made a counter yet.
+    
+    struct open_file_node *node = open_file->reference; 
+    struct open_file_node *p = node->prev; 
+    struct open_file_node *n = node->next; 
     p->next = n; 
     n->prev = p; 
+    // TODO: Head and Tail reassignment
+    kfree(file);
     
-    kfree(file); 
     OF_LOCK_RELEASE();
+    */
 
     // Success 
     return 0; 
@@ -223,10 +229,11 @@ struct file_descriptor_table *create_file_table() {
 
     spinlock_init(&fdtable->lock);
 
-    struct open_file *stdout_file = create_open_file();
-    char stdoutPath[] = "con:";
-    if ((*errno = vfs_open(stdoutPath, O_WR, 0, &stdout_file->vnode))) return -1;  
+    // FD_LOCK_ACQUIRE();
 
+    struct open_file *stdin_file = create_open_file();
+    char stdinPath[] = "con:";
+    if ((*errno = vfs_open(stdin, O_RD, 0, &stdin_file->vnode))) return -1;  
 
     struct open_file *stdout_file = create_open_file();
     char stdoutPath[] = "con:";
@@ -237,15 +244,12 @@ struct file_descriptor_table *create_file_table() {
     char stderrPath[] = "con:";
     if ((*errno = vfs_open(stderrPath, O_WR, 0, &stderr_file->vnode))) return -1;  
 
-
-
+    // FD_LOCK_RELEASE();
     
-    assign_fd(1, )
-    assign_fd(2, )
-    // fdtable->map[0] = STDIN_FILENO;
-    fdtable->map[STDOUT_FILENO] = ;
-    fdtable->map[STDERR_FILENO] = ;
-    fdtable->next_fd = 3; // 0, 1, 2 are used for STDIN, STDOUT, STDERR
+    assign_fd(STDIN_FILENO, stdin_file->vnode);
+    assign_fd(STDOUT_FILENO, stdout_file->vnode);
+    assign_fd(STDERR_FILENO, stderr_file->vnode);
+    fdtable->next_fd = 3;
 
     return fdtable;
 }
@@ -409,20 +413,6 @@ void uio_init (
         off_t offset, 
         enum uio_rw rw
     ) {
-
-    // { 
-    //     iov->iov_ubase = buf; 
-    //     iov->iov_len = len; 
-    //     u->uio_iov = iov; 
-    //     u->uio_iovcnt = 1; 
-    //     u->uio_offset = offset; 
-    //     u->uio_resid = len; 
-    //     u->uio_segflg = UIO_USERSPACE; 
-    //     u->uio_rw = rw; 
-    //     u->uio_space = rw, 
-        
-    // }
-
     
     *iov = (struct iovec) {
         .iov_ubase = buf,

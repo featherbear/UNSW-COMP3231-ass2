@@ -35,7 +35,7 @@ struct file_descriptor_table
 /* Calculate the next free fd */
 int get_free_fd(int *retval);
 
-/* TODO: Close a fd */
+/* Close a fd */
 void fd_close(fd_t fd);
 
 /* Creates and links FD table to the current process */
@@ -47,13 +47,6 @@ void destroy_file_table(void);
 /* #endregion */
 
 /* #region OF Layer */
-
-// === One Important Note ===
-// In modern operating systems, the "open file table" is **usually a doubly linked list**, not a static table.  
-// This ensures that it is typically a reasonable size while capable of accomodating workloads that use massive numbers of files. 
-// - Source: https://cseweb.ucsd.edu/classes/sp16/cse120-a/applications/ln/lecture15.html
-// 
-// Ehh. HAHA
 
 /* File entry in the Open File table */
 struct open_file {

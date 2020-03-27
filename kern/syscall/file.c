@@ -118,14 +118,29 @@ int sys_read(int fd, userptr_t buf, int buflen, int *retval) {
 
     // Prepare the uio 
     struct uio *new_uio; 
-    
+    struct iovev new_iov; 
 
-    // TODO: Write this helper function (also need to declare it in file.h)
-    struct *uio uio_init() { 
-        struct uio *new_uio = kmalloc(sizeof(*uio)); 
-
+    // TODO: Write this helper function (also need to declare it in file.h) 
+    // Got it straight from the assign 2 video. 
+    struct *uio uio_init(
+        struct iovec *iov, 
+        struct iou *u, 
+        userptr_t buf, 
+        size_t len, 
+        off_t offset, 
+        enum uio_rw rw
+    ) { 
+        iov->iov_ubase = buf; 
+        iov->iov_len = len; 
+        u->uio_iov = iov; 
+        u->uio_iovcnt = 1; 
+        u->uio_offset = offset; 
+        u->
+        
         // fill in the uio details 
     }
+    
+    //messenger !!!
     
     // Call VOP to do the reading 
     e = VOP_READ(file->vnode, new_uio); 
@@ -255,12 +270,20 @@ int get_free_fd(int *retval) {
 
 /* #region OF Layer */
 
+
+struct open_file_node {
+    struct open_file_node *prev;
+    struct open_file_node *next;
+    struct open_file *entry;
+}
+
+
 int create_open_file_table() {
     if (open_file_table != NULL) {
         return ENOSYS;
     } 
     
-    open_file_table = kmalloc(sizeof(struct open_file) * OPEN_MAX);
+    open_file_table = kmalloc(sizeof(struct open_file_table))
     if (open_file_table == NULL) {
         return ENOMEM;
     }

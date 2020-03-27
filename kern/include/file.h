@@ -58,7 +58,12 @@ struct open_file {
     struct lock *lock;   // Shared access 
 };
 
-struct open_file *open_file_table = NULL; // Define our global value here
+struct open_file_table {
+    spinlock_t lock;
+    struct open_file_node *head;
+};
+
+struct open_file_table *open_file_table = NULL; // Define our global value here
 
 /* Initialise the global open file table */
 int create_open_file_table(void);

@@ -60,7 +60,7 @@ int sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
     return fd;
     
 } 
-
+/* #region sys_close */
 int sys_close(int fd, *retval) { 
     
     // Get the file 
@@ -82,7 +82,6 @@ int sys_close(int fd, *retval) {
         return -1; 
     }
 
-    /* Cleaning code TODO: Double Check if missing anything */
 
     // TODO: Check other references to the vnode - remove from OF table if all references have finished.
     
@@ -94,17 +93,18 @@ int sys_close(int fd, *retval) {
     // Success 
     return 0; 
 }
+/* #endregion */
 
 int sys_read(int fd, (userptr_t)buffer, int bufflen, int *retval) { 
     
     int e;
 
-    // Acquire the file for fd
+    // Get the file 
     struct open_file *file; 
-    e = get_open_file_from_fd(fd, &file); 
-    if (e) { 
-        *retval = e; 
-        return -1; 
+
+    *retval = get_open_file_from_fd(fd, &file);
+    if (*retval != 0) {
+        return -1;
     }
 
     // Check the permissions 
@@ -136,7 +136,41 @@ int sys_read(int fd, (userptr_t)buffer, int bufflen, int *retval) {
     return 0;     
 }
 
-int sys_write() { 
+// TODO: Write a prototype in file.h
+int sys_write(int fd, (userptr_t)buf, int buflen, &retval) {  
+    
+    // Get the file 
+    struct open_file *file; 
+    
+    *retval = get_open_file_from_fd(fd, &file);
+    if (*retval != 0) {
+        return -1;
+    }   
+
+    // Check if we have the permission 
+    int flags = file->flags; 
+    if !(flags == O_WRONLY || flags == O_RDWR) {
+        *retval = EPERM; 
+        return -1; 
+    }
+
+    /*  TODO:
+        Error: EFAULT  
+        Part or all of the address space pointed to 
+        by buf is invalid. 
+        Implement this error using uio (?) 
+        Or copyinstr() 
+    */ 
+
+
+    /* 
+        TODO:  ENOSPC --> No free space remaining on the filesystem 
+        containing the file.. 
+        How should we implement this. 
+    */ 
+
+
+
 
 /* 
 The flags argument should consist of one of

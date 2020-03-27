@@ -56,7 +56,7 @@ struct open_file {
     int flags;           // Access flags
     struct vnode *vnode; // Pointer to the VFS node
     struct lock *lock;   // Shared access 
-    void *reference;      // Reference to the open_file_node ADT
+    void *reference;     // Reference to the open_file_node ADT
 };
 
 struct open_file_table;

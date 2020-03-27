@@ -21,9 +21,9 @@ typedef int fd_t;
 /* PER-PROCESS map of a file descriptors to its `struct file_entry` */
 struct file_descriptor_table
 {
-    fd_t next_fd;       // Next free file descriptor number 
-    fd_t map[OPEN_MAX]; // Array of indices to the OFT
-    struct spinlock lock;    // Thread-safe lock
+    fd_t next_fd;                        // Next free file descriptor number 
+    struct open_file *map[OPEN_MAX];     // Array of pointers to the OFT
+    struct spinlock lock;                // Thread-safe lock
 
     // TODO: Released files should get the same fd if they are requested again
     /* 
@@ -83,7 +83,7 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file);
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno);
 int sys_close(fd_t fd, int *errno); 
-int sys_read(fd_t fd, userptr_t buf, int buflen, int *errno);
+int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno);
 int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno);
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno);
 fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno);

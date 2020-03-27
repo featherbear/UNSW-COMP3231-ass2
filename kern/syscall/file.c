@@ -33,6 +33,7 @@ static struct open_file *__allocate_open_file();
 static struct open_file_node *__create_open_file_node();
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
 static void assign_fd(fd_t fd, struct open_file *open_file);
+static bool check_invalid_fd(fd_t fd);
 
 struct open_file_table {
     struct spinlock lock;
@@ -137,11 +138,11 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     
     // Get the file 
     struct open_file *file; 
-    if ((*errno = get_open_file_from_fd(fd, &file))) != 0) return -1;
+    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
 
     // Check the permissions 
     int flags = file->flags;  
-    if (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR) { 
+    if (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR)) { 
         *errno = EPERM; 
         return -1;  
     } 
@@ -149,18 +150,15 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // Prepare the uio 
     struct iovec new_iov;
     struct uio new_uio; 
-    char *kernel_buf = kmalloc(buflen); 
-    uio_init(&new_iov, &new_uio, kernel_buf, sizeof(kernel_buf), file->offset, UIO_READ);
+    uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
     
     lock_acquire(file->lock); 
-    if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) { 
+    if ((*errno = VOP_READ(file->vnode, &new_uio)) != 0) { 
         lock_release(file->lock); 
-        kfree(kernel_buf); 
         return -1; 
     } 
 
     lock_release(file->lock);
-    kfree(kernel_buf);  
     return 0;     
 }
 
@@ -173,32 +171,38 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
     // Check if we have permission to write
     int flags = file->flags; 
-    if (!MATCH_BIMASK(flags, O_WRONLY) && !MATCH_BITMASK(flags, O_RDWR)) {
+    if (!MATCH_BITMASK(flags, O_WRONLY) && !MATCH_BITMASK(flags, O_RDWR)) {
         *errno = EPERM; 
         return -1; 
     }
 
+    // FIXME: TEST
     // Copy data from User-land into Kernel-land 
+    /*
     char *kernel_buf = kmalloc(sizeof(buflen));
     if ((*errno = copyin(buf, kernel_buf, sizeof(kernel_buf)) != 0) return -1; 
+    */
 
     // Prepare the uio 
     struct iovec new_iov; 
     struct uio new_uio; 
 
-    uio_init(&new_iov, &new_uio, kernel_buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
+
+    // FIXME: TEST :: uio_init(&new_iov, &new_uio, kernel_buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
+
+    uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_WRITE);
 
     lock_acquire(file->lock);
     if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) { 
 
         // Covers the case where no free space is left on the file (ENOSPC) 
         lock_release(file->lock);
-        kfree(kernel_buf);
+        // FIXME: TEST :: kfree(kernel_buf);
         return -1;     
     }
     file->offset += sizeof(kernel_buf); 
     lock_release(file->lock);
-    kfree(kernel_buf);
+    FIXME: TEST :: kfree(kernel_buf);
     return 0;
 }
 
@@ -247,11 +251,12 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
 
 /* #region FD Layer */
 
+// TODO: Meta
 static bool check_invalid_fd(fd_t fd) {
     return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
 }
 
-
+// TODO: Meta
 struct file_descriptor_table *create_file_table() {
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
     

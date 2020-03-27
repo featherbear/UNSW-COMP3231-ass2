@@ -31,24 +31,20 @@
 
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
-    
+
+    // Find an empty file descriptor no.
     fd_t fd;
-    if ((*errno = get_free_fd(&fd)) != 0) {
-        kprint("Error with function: get_free_fd()\n"); 
-        return -1;
-    } 
+    if ((*errno = get_free_fd(&fd)) != 0) return -1;
 
+    // Create a new struct OPEN_FILE 
     struct open_file *open_file = create_open_file();
-
-    if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) { 
-        return -1;  
-    }
-
-    open_file->fp = 0;
+    if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) return -1;  
+    open_file->offset = 0;
     open_file->flags = flags;
 
+    // 
     assign_fd(fd, open_file);
-
+    
     return fd;
     
 }
@@ -57,15 +53,10 @@ int sys_close(fd_t fd, *errno) {
     
     // Get the file 
     struct open_file *file;     
-    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) {
-        return -1;
-    }
+    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
 
-    lock_acquire(file->lock); /////////////////////////
-
-    if ((*errno = vfs_close(file->vnode)) != 0) { 
-        return -1; 
-    }
+    // Delegate to VFS
+    if ((*errno = vfs_close(file->vnode)) != 0) return -1; 
 
     FD_LOCK_ACQUIRE();
     assign_fd(fd, NULL);
@@ -98,14 +89,12 @@ fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
     // Check if newfd is open, if so then close
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
     if (fdtable->map[newfd] != NULL && sys_close(newfd, errno) != 0) {
-            return -1;
+        return -1;
     }
 
-    assign_fs(newfd, fdtable->map[oldfd]);
-
+    assign_fd(newfd, fdtable->map[oldfd]);
+    
     return newfd;
-
-
 }
 
 int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) { 
@@ -201,10 +190,28 @@ It may also have any of the following flags OR'd in:
 
 
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
-    if (whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END) {
-        *errno = EINVAL;
-        return -1;
+    switch (whence) {
+        case SEEK_SET:
+        case SEEK_CUR:
+        case SEEK_END:
+            break;
+        default:
+            *errno = EINVAL;
+            return -1;
     }
+
+    struct open_file *open_file = get_open_file_from_fd(fd);
+    off_t curPos = open_file->fp;
+    off_t newPos;
+
+    if (whence == SEEK_SET) {
+        newPos = pos;
+    } else if (whence == SEEK_CUR) {
+        newPos = curPos + pos; 
+    } else {
+
+    }
+    
 }
 
 //
@@ -241,10 +248,12 @@ void destroy_file_table(struct file_descriptor_table *fdtable) {
 void assign_fd(fd_t fd, struct open_file *open_file) {
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
      
-    spinlock_acquire(&fdtable->lock);
+    FD_LOCK_ACQUIRE();
+
     // TODO: Check if it used?
     fdtable->map[fd] = open_file;
-    spinlock_release(&fdtable->lock);
+    
+    FD_LOCK_ACQUIRE();
 }
 
 int get_free_fd(int *errno) {

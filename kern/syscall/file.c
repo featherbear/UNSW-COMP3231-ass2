@@ -36,7 +36,7 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     open_file->offset = 0;
     open_file->flags = flags;
 
-    // Table Management for of_table
+    // Map file descriptor to the open file
     assign_fd(fd, open_file);
     
     // Success
@@ -107,16 +107,18 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // Prepare the uio 
     struct iovec new_iov;
     struct uio new_uio; 
-    // FIXME: Kernel-level / User-level 
-    uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
+    char *kernel_buf = kmalloc(buflen); 
+    uio_init(&new_iov, &new_uio, kernel_buf, sizeof(kernel_buf), file->offset, UIO_READ);
     
     lock_acquire(file->lock); 
     if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) { 
         lock_release(file->lock); 
+        kfree(kernel_buf); 
         return -1; 
     } 
 
-    lock_release(file->lock); 
+    lock_release(file->lock);
+    kfree(kernel_buf);  
     return 0;     
 }
 
@@ -142,13 +144,7 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     struct iovec new_iov; 
     struct uio new_uio; 
 
-struct iovec *iov, 
-        struct iou *u, 
-        userptr_t buf, 
-        size_t len, 
-        off_t offset, 
-        enum uio_rw rw
-    uio_init(&new_iov, &new_uio, buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
+    uio_init(&new_iov, &new_uio, kernel_buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
 
     lock_acquire(file->lock);
     if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) { 
@@ -156,12 +152,11 @@ struct iovec *iov,
         // Covers the case where no free space is left on the file (ENOSPC) 
         lock_release(file->lock);
         kfree(kernel_buf);
-        // :( )
         return -1;     
     }
     file->offset += sizeof(kernel_buf); 
     lock_release(file->lock);
-
+    kfree(kernel_buf);
     return 0;
 }
 
@@ -223,11 +218,13 @@ struct file_descriptor_table *create_file_table() {
     }
 
     spinlock_init(&fdtable->lock);
-    fdtable->map[0] = STDIN_FILENO;
-    fdtable->map[1] = STDOUT_FILENO;
-    fdtable->map[2] = STDERR_FILENO;
+
+    assign_fd(1, )
+    assign_fd(2, )
+    // fdtable->map[0] = STDIN_FILENO;
+    fdtable->map[STDOUT_FILENO] = ;
+    fdtable->map[STDERR_FILENO] = ;
     fdtable->next_fd = 3; // 0, 1, 2 are used for STDIN, STDOUT, STDERR
-    // TODO: Create FD->OF->STDIO
 
     return fdtable;
 }
@@ -355,8 +352,6 @@ int create_open_file_table() {
     open_file_table->head = NULL;
     open_file_table->tail = NULL;
 
-
-    // TODO: Create OF nodes for STDIN, STDOUT, STDERR
     return 0;
 }
 

@@ -208,9 +208,9 @@ It may also have any of the following flags OR'd in:
 /* #region FD Layer */
 
 struct file_descriptor_table *create_file_table() {
-    if (curproc->p_fdtable != NULL) {
-        KASSERT(0);
-    }
+    // if (curproc->p_fdtable != NULL) {
+    //     KASSERT(0);
+    // }
 
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
     
@@ -226,7 +226,7 @@ struct file_descriptor_table *create_file_table() {
     // TODO: Assignment call
     // TODO: Create FD->OF->STDIO
 
-    curproc->p_fdtable = fdtable;
+    // curproc->p_fdtable = fdtable;
     
     return fdtable;
 }

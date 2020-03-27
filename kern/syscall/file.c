@@ -282,12 +282,41 @@ struct open_file_node {
     struct open_file *entry;
 }
 
-struct open_file *create_open_file() {
-    struct open_file_node *file
-    spinlock_acquire(&open_file_table->lock);
+struct open_file_node *create_open_file_node() {
+    struct open_file_node *open_file_node = kmalloc(sizeof(*open_file_node));
+    if (open_file_node == NULL) {
+        KASSERT(0);
+    }
+    open_file_node->prev = NULL;
+    open_file_node->next = NULL;
 
+
+
+    spinlock_acquire(&open_file_table->lock);
+    open_file_table->tail
     spinlock_release(&open_file_table->lock);
 }
+
+struct open_file *create_open_file() {
+    struct open_file *open_file = kmalloc(sizeof(*open_file));
+    if (open_file == NULL) {
+        KASSERT(0);
+    }
+
+    open_file->flags = 0;
+    open_file->vnode = NULL;
+    open_file->lock = lock_create("File lock")
+
+/*
+struct open_file {
+    int flags;           // Access flags
+    struct vnode *vnode; // Pointer to the VFS node
+    struct lock *lock;   // Shared access 
+    void *reference;     // Reference to the open_file_node ADT
+};
+*/
+}
+
 
 int create_open_file_table() {
     if (open_file_table != NULL) {

@@ -52,7 +52,6 @@ void destroy_file_table(void);
 
 /* File entry in the Open File table */
 struct open_file {
-    int fp;              // File
     int flags;           // Access flags
     struct vnode *vnode; // Pointer to the VFS node
     struct lock *lock;   // Shared access 

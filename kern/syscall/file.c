@@ -21,8 +21,9 @@
 #define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
 #define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock)) 
 
-#define FILE_LOCK_AQCUIRE() (lock_acquire(&file->lock))
-#define FILE_LOCK_RELEASE() (lock_release(&file->lock))
+// !ignore WARN_LOCAL
+#define FILE_LOCK_ACQUIRE() (lock_acquire(file->lock))
+#define FILE_LOCK_RELEASE() (lock_release(file->lock))
 
 #define MATCH_BITMASK(value, mask) (value & mask == mask)
 
@@ -32,17 +33,22 @@
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
-    // Find an empty file descriptor no.
+    // Find an empty file descriptor number
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
 
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
     if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) return -1;  
+    
+    
     open_file->offset = 0;
+    // TODO: Append flag would set this to the end
+    // open_file->offset = MATCH_BITMASK(flags, O_APPEND) ? VOP_STAT(open_file) : 0;
+    
     open_file->flags = flags;
 
-    // Table Management for of_table
+    // Map the file descriptor to the new `struct open_file`
     assign_fd(fd, open_file);
     
     return fd;
@@ -61,7 +67,7 @@ int sys_close(fd_t fd, *errno) {
     FD_LOCK_ACQUIRE();
     assign_fd(fd, NULL);
 
-    // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
+    // If there were no free fd's, assign next_fd to be the fd-to-be-removed
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
@@ -146,7 +152,7 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     struct uio *new_uio; 
     uio_init(&new_iov, &new_uio, buf, sizeof(kernel_buf), file->offset, UIO_READ);
 
-    FILE_LOCK_AQCUIRE() 
+    FILE_LOCK_ACQUIRE() 
     if ((*errno = VOP_WRITE(f->vnode, &new_uio)) != 0) { 
         
         // Covers the case where no free space is left on the file (ENOSPC) 
@@ -180,6 +186,7 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
         return -1;
     }
 
+
     off_t curPos = open_file->offset;
     off_t newPos;
 
@@ -201,7 +208,7 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
     }
 
     open_file->offset = newPos;
-    
+
     return newPos;
     
 }

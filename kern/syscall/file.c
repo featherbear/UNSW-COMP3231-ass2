@@ -61,11 +61,10 @@ int sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
     
 } 
 
-int sys_close(int fd, &retval) { 
+int sys_close(int fd, *retval) { 
     
     // Get the file 
-    struct open_file *file = NULL; 
-    int e = get_open_file_from_fd(fd, &file); struct open_file *file;
+    struct open_file *file; 
     
     *retval = get_open_file_from_fd(fd, &file);
     if (*retval != 0) {

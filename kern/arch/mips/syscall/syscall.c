@@ -101,17 +101,16 @@ syscall(struct trapframe *tf)
 
 	switch (callno) {
 	    case SYS_reboot:
-		err = sys_reboot(tf->tf_a0);
-		break;
+			retval = sys_reboot(tf->tf_a0);
+			break;
 
 	    case SYS___time:
-		err = sys___time((userptr_t)tf->tf_a0,
-				 (userptr_t)tf->tf_a1);
-		break;
+			retval = sys___time((userptr_t)tf->tf_a0, (userptr_t)tf->tf_a1);
+			break;
 
 		case SYS_open: 
-			err = sys_open((userptr_t)tf->tf_a0, tf->tf_a1, tf->tf_a2, &retval); 
-		break; 
+			retval = sys_open((userptr_t)tf->tf_a0, tf->tf_a1, tf->tf_a2, &retval); 
+			break; 
 
 		case SYS_close: 
 			err = sys_close(tf->tf_a0, &retval); 
@@ -125,18 +124,22 @@ syscall(struct trapframe *tf)
 			err = sys_write(tf->tf_a0, (userptr_t)tf->tf_a1, tf->tf_a2, &retval); 
 		break;
 
-		case SYS_dup2: 
-			off_t pos;
-			int whence;
-			join32to64(tf->tf_a2, tf->tf_a3, &pos);
-			copyin((userptr_t) tf->tf_sp + 16, &whence, sizeof(int));
-			off_t err64 = sys_dup2(tf->tf_a0, pos, &retval);
-			split64to32(err64, )
-		break; 
-
 		case SYS_lseek: 
+			off_t pos;
+			join32to64(tf->tf_a2, tf->tf_a3, &pos);
+			
+			int whence;
+			copyin((userptr_t) tf->tf_sp + 16, &whence, sizeof(int));
+
+			off_t newPosition = sys_dup2(tf->tf_a0, pos, whence, &retval);
+			if (newPosition == -1) err = retval;
+									 // v0 assigned to retval below
+			split64to32(newPosition, &retval, &tf->tf_v1);
+			break; 
+
+		case SYS_dup2: 
+			err = sys_dup2(tf->tf_a0, tf->tf_a2);
 			// TODO: The third argument "WHENCE" is stored on the stack, not sure how to get it. 
-			// err = sys_lseek(tf->tf_a0, tf->tf_a2, tf->tf_a3,  &retval); 
 		break; 
 
 		case 

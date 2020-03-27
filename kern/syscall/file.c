@@ -48,8 +48,6 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
     
 }
 
-
-/* #region sys_close */
 int sys_close(fd_t fd, *retval) { 
     
     // Get the file 
@@ -60,7 +58,7 @@ int sys_close(fd_t fd, *retval) {
 
     lock_acquire(file->lock); /////////////////////////
 
-    if ((*retval = vfs_close(file->vnode;)) != 0) { 
+    if ((*retval = vfs_close(file->vnode)) != 0) { 
         return -1; 
     }
 
@@ -85,7 +83,6 @@ int sys_close(fd_t fd, *retval) {
     // Success 
     return 0; 
 }
-/* #endregion */
 
 int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) { 
     
@@ -154,6 +151,9 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *retval) {
     // Check if we have the permission 
     int flags = file->flags; 
 
+    // FIXME:         O_APPEND	Open the file in append mode.
+    // #define MATCH_BITMASK(value, mask) (value & mask == mask)
+    // MATCH_BITMASK(flags, O_WRONLY)
     if !(flags == O_WRONLY || flags == O_RDWR) {
         *retval = EPERM; 
         return -1; 

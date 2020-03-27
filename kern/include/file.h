@@ -85,18 +85,15 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file);
 
 /* #endregion */
 
-
-
 /* #region File Operations */
 
 // TODO: Populate the other prototypes
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval);
+int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval);
 int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *retval);
-// int sys_close(int, *int); 
 
-// ssize_t read(int fd, void *buf, size_t buflen);
-// int sys_read(int, void *, size_t buflen, *int); 
+// int sys_close(int, *int); 
 
 // int sys_write(*int); 
 // int sys_lseek(*int); 

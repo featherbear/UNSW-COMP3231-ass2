@@ -21,6 +21,8 @@
 #define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
 #define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
 
+#define MATCH_BITMASK(value, mask) (value & mask == mask)
+
 /* 
     Return ENOSYS for any possible coding errors for debugging purposes.
 */
@@ -84,13 +86,14 @@ int sys_close(fd_t fd, *errno) {
     return 0; 
 }
 
-int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) { 
+fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
+
+}
+int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) { 
     
     // Get the file 
     struct open_file *file; 
-
-    *retval = get_open_file_from_fd(fd, &file);
-    if (*retval != 0) {
+    if ((*errno = get_open_file_from_fd(fd, &file))) != 0) {
         return -1;
     }
 
@@ -104,31 +107,9 @@ int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) {
     // TODO: We shouldn't need to change the locks here right? Double-checkin' 
 
     // Prepare the uio 
-    struct uio *new_uio; 
     struct iovev new_iov; 
-
-    // TODO: Write this helper function (also need to declare it in file.h) 
-    // Got it straight from the assign 2 video. 
-    struct *uio uio_init(
-        struct iovec *iov, 
-        struct iou *u, 
-        userptr_t buf, 
-        size_t len, 
-        off_t offset, 
-        enum uio_rw rw
-    ) { 
-        iov->iov_ubase = buf; 
-        iov->iov_len = len; 
-        u->uio_iov = iov; 
-        u->uio_iovcnt = 1; 
-        u->uio_offset = offset; 
-        u->uio_resid = len; 
-        u->uio_segflg = UIO_USERSPACE; 
-        u->uio_rw = rw; 
-        u->uio_space = proc_getas(); 
-        
-        // fill in the uio details 
-    }
+    struct uio *new_uio; 
+    uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
 
 
     
@@ -141,25 +122,19 @@ int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) {
     return 0;     
 }
 
-int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *retval) {  
+
+
+int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {  
     
-    // Get the file 
     struct open_file *file; 
-    
-    *retval = get_open_file_from_fd(fd, &file);
-    if (*retval != 0) {
+    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) {
         return -1;
     }   
 
     // Check if we have the permission 
     int flags = file->flags; 
 
-    // FIXME:         O_APPEND	Open the file in append mode.
-
-    // #define MATCH_BITMASK(value, mask) (value & mask == mask)
-    // if (MATCH_BITMASK(flags, O_WRONLY) || MATCH_BITMASK(flags, O_RDWR) || MATCH_BITMASK(flags, O_APPEND)) {}
-    
-    if !(flags == O_WRONLY || flags == O_RDWR) {
+    if (!MATCH_BIMASK(flags, O_WRONLY) && !MATCH_BITMASK(flags, O_RDWR) {
         *retval = EPERM; 
         return -1; 
     }
@@ -386,3 +361,25 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
 /* #endregion */
 
+// Stolen from Asst2 Video
+void uio_init (
+        struct iovec *iov, 
+        struct iou *u, 
+        userptr_t buf, 
+        size_t len, 
+        off_t offset, 
+        enum uio_rw rw
+    ) 
+
+    { 
+        iov->iov_ubase = buf; 
+        iov->iov_len = len; 
+        u->uio_iov = iov; 
+        u->uio_iovcnt = 1; 
+        u->uio_offset = offset; 
+        u->uio_resid = len; 
+        u->uio_segflg = UIO_USERSPACE; 
+        u->uio_rw = rw; 
+        u->uio_space = rw, 
+        
+    }

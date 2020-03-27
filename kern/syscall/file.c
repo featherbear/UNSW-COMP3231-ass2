@@ -19,13 +19,16 @@
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
 #define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
-#define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
+#define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock)) 
+
+#define FILE_LOCK_AQCUIRE() (lock_acquire(&file->lock))
+#define FILE_LOCK_RELEASE() (lock_release(&file->lock))
 
 #define MATCH_BITMASK(value, mask) (value & mask == mask)
 
-/* 
-    Return ENOSYS for any possible coding errors for debugging purposes.
-*/
+// Thought we need this but apparently not FIXME 
+// void uio_init (struct iovec *iov, struct iou *u, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
+
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
     
@@ -87,8 +90,24 @@ int sys_close(fd_t fd, *errno) {
 }
 
 fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
+    if (check_invalid_fd(oldfd) || check_invalid_fd(newfd)) {
+        *errno = EBADF;
+        return -1;
+    }
+
+    // Check if newfd is open, if so then close
+    struct file_descriptor_table *fdtable = curproc->p_fdtable;
+    if (fdtable->map[newfd] != NULL && sys_close(newfd, errno) != 0) {
+            return -1;
+    }
+
+    assign_fs(newfd, fdtable->map[oldfd]);
+
+    return newfd;
+
 
 }
+
 int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) { 
     
     // Get the file 
@@ -99,12 +118,10 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
     // Check the permissions 
     int flags = file->flags;  
-    if !(flags == O_RDONLY || flags == O_RDWR) { 
-        *retval = EPERM; 
+    if (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR) { 
+        *errno = EPERM; 
         return -1;  
     } 
-
-    // TODO: We shouldn't need to change the locks here right? Double-checkin' 
 
     // Prepare the uio 
     struct iovev new_iov; 
@@ -112,7 +129,6 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
 
 
-    
     // Call VOP to do the reading 
     if ((*retval = VOP_READ(file->vnode, new_uio)) != 0) { 
         return -1; 
@@ -123,9 +139,9 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 }
 
 
-
 int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {  
     
+    // Get the file 
     struct open_file *file; 
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) {
         return -1;
@@ -135,13 +151,12 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     int flags = file->flags; 
 
     if (!MATCH_BIMASK(flags, O_WRONLY) && !MATCH_BITMASK(flags, O_RDWR) {
-        *retval = EPERM; 
+        *errno = EPERM; 
         return -1; 
     }
 
     // Copy in the data from User-land into Kernel-land 
-    char kernel_buf[buflen]; // FIXME: Awhhh you wish you could do this
-
+    char *kernel_buf = malloc(sizeof(buflen)); 
     e = copyin(buf, kernel_buf, sizeof(kernel_buf)); 
     if (e) {  
 
@@ -150,9 +165,13 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         return -1; 
     } 
 
-    uio_init()
+    // Prepare the uio 
+    struct iovev new_iov; 
+    struct uio *new_uio; 
+    uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
 
-    // TODO: Acquire the file lock before we start changing it 
+
+    
 
 
 
@@ -274,6 +293,7 @@ struct open_file_node {
 static struct open_file_node *__create_open_file_node() {
     struct open_file_node *open_file_node = kmalloc(sizeof(*open_file_node));
     if (open_file_node == NULL) {
+        // ENFILE
         KASSERT(0);
     }
 
@@ -300,6 +320,7 @@ static struct open_file *__allocate_open_file() {
     struct open_file *open_file = kmalloc(sizeof(*open_file));
     if (open_file == NULL) {
         KASSERT(0);
+        // ENFILE
     }
 
     open_file->flags = 0;

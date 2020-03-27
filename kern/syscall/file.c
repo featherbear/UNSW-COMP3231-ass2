@@ -64,14 +64,13 @@ int sys_close(fd_t fd, *errno) {
     // Delegate to VFS
     if ((*errno = vfs_close(file->vnode)) != 0) return -1; 
 
-    FD_LOCK_ACQUIRE();
     assign_fd(fd, NULL);
 
-    // If there were no free fd's, assign next_fd to be the fd-to-be-removed
+    FD_LOCK_ACQUIRE();
+    // If there were no free fd's, assign the next fd to be the removed fd
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
-
     FD_LOCK_RELEASE();
 
     // Check other references to the vnode - remove from OF table if all references have finished.
@@ -120,7 +119,6 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // Prepare the uio 
     struct iovec new_iov;
     struct uio *new_uio; 
-
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
     
     if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) return -1; 
@@ -393,22 +391,31 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 // Stolen from Asst2 Video
 void uio_init (
         struct iovec *iov, 
-        struct iou *u, 
+        struct iou *iou, 
         userptr_t buf, 
         size_t len, 
         off_t offset, 
         enum uio_rw rw
-    ) 
+    ) {
 
-    { 
-        iov->iov_ubase = buf; 
-        iov->iov_len = len; 
-        u->uio_iov = iov; 
-        u->uio_iovcnt = 1; 
-        u->uio_offset = offset; 
-        u->uio_resid = len; 
-        u->uio_segflg = UIO_USERSPACE; 
-        u->uio_rw = rw; 
-        u->uio_space = rw, 
+*iov = (struct iovec) {
+    .iov_ubase = buf,
+    .iov_len = len
+};
+
+*iou = (struct iou) {
+        .uio_iov = iov,
+        .uio_iovcnt = 1,
+        .uio_offset = offset,
+        .uio_resid = len,
+        .uio_segflg = UIO_USERSPACE,
+        .uio_rw = rw,
+        .uio_space = rw
+}
+
+
+     
+    
+    
         
-    }
+}

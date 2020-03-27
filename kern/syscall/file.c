@@ -282,17 +282,15 @@ struct open_file_node {
     struct open_file *entry;
 }
 
-struct open_file_node *create_open_file_node() {
+struct open_file_node *__create_open_file_node() {
     struct open_file_node *open_file_node = kmalloc(sizeof(*open_file_node));
     if (open_file_node == NULL) {
         KASSERT(0);
     }
+
     open_file_node->prev = NULL;
     open_file_node->next = NULL;
-
-    struct open_file *open_file = create_open_file();
-    open_file_node->entry = open_file;
-    open_file->reference = open_file_node;
+    open_file_node->entry = NULL;
 
     spinlock_acquire(&open_file_table->lock);
     if (open_file_table->head == NULL) {
@@ -303,9 +301,11 @@ struct open_file_node *create_open_file_node() {
         open_file_table->tail = open_file_node;
     }
     spinlock_release(&open_file_table->lock);
+
+    return open_file_node;
 }
 
-struct open_file *create_open_file() {
+struct open_file *allocate_open_file() {
     struct open_file *open_file = kmalloc(sizeof(*open_file));
     if (open_file == NULL) {
         KASSERT(0);
@@ -316,6 +316,13 @@ struct open_file *create_open_file() {
     open_file->lock = lock_create("File lock")
 
     return open_file;
+}
+
+struct open_file *create_open_file() {
+    struct open_file *open_file = create_open_file();
+    open_file_node->entry = open_file;
+    open_file->reference = open_file_node;
+
 }
 
 

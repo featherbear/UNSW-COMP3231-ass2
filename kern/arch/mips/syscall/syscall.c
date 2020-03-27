@@ -101,19 +101,19 @@ syscall(struct trapframe *tf)
 
 	switch (callno) {
 	    case SYS_reboot:
-			retval = sys_reboot(tf->tf_a0);
+			err = sys_reboot(tf->tf_a0);
 			break;
 
 	    case SYS___time:
-			retval = sys___time((userptr_t)tf->tf_a0, (userptr_t)tf->tf_a1);
+			err = sys___time((userptr_t)tf->tf_a0, (userptr_t)tf->tf_a1);
 			break;
 
 		case SYS_open: 
-			retval = sys_open((userptr_t)tf->tf_a0, tf->tf_a1, tf->tf_a2, &retval); 
+			err = sys_open((userptr_t)tf->tf_a0, tf->tf_a1, tf->tf_a2, &retval); 
 			break; 
 
 		case SYS_close: 
-			retval = sys_close(tf->tf_a0, &err); 
+			err = sys_close(tf->tf_a0, &err); 
 			break; 
 
 		case SYS_read:  

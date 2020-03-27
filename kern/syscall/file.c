@@ -200,9 +200,10 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         // FIXME: TEST :: kfree(kernel_buf);
         return -1;     
     }
-    file->offset += sizeof(kernel_buf); 
+    // FIXME: TEST :: file->offset += sizeof(kernel_buf); 
+    file->offset += buflen;
     lock_release(file->lock);
-    FIXME: TEST :: kfree(kernel_buf);
+    //FIXME: TEST :: kfree(kernel_buf);
     return 0;
 }
 
@@ -217,7 +218,8 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
             return -1;
     }
 
-    struct open_file *open_file = get_open_file_from_fd(fd);
+    struct open_file *open_file;
+    if ((*errno = get_open_file_from_fd(fd, &open_file)) != 0) return -1;
 
     if (!VOP_ISSEEKABLE(open_file->vnode)) {
         *errno = ESPIPE;
@@ -226,6 +228,8 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
 
     off_t curPos = open_file->offset;
     off_t newPos;
+
+    struct stat stat; // For SEEK_END
 
     switch (whence) {
 
@@ -236,7 +240,8 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
             newPos = curPos + pos; 
             break;
         case SEEK_END:
-            newPos = VOP_STAT(open_file->vnode) + pos;
+            VOP_STAT(open_file->vnode, &stat);
+            newPos = stat.st_size + pos;
             break;
     }
 
@@ -258,34 +263,45 @@ static bool check_invalid_fd(fd_t fd) {
 
 // TODO: Meta
 struct file_descriptor_table *create_file_table() {
+
+
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
     
     if (fdtable == NULL) {
-        return ENOMEM;
+        return NULL; // Let proc.c deal with this
+        // return ENOMEM;
     }
 
     spinlock_init(&fdtable->lock);
 
     // FD_LOCK_ACQUIRE();
-
     struct open_file *stdin_file = create_open_file();
     char stdinPath[] = "con:";
-    if ((*errno = vfs_open(stdin, O_RD, 0, &stdin_file->vnode))) return -1;  
+    if (vfs_open(stdinPath, O_RDONLY, 0, &stdin_file->vnode) != 0) return NULL;  
 
     struct open_file *stdout_file = create_open_file();
     char stdoutPath[] = "con:";
-    if ((*errno = vfs_open(stdoutPath, O_WR, 0, &stdout_file->vnode))) return -1;  
+    if (vfs_open(stdoutPath, O_WRONLY, 0, &stdout_file->vnode) != 0) return NULL;  
 
 
     struct open_file *stderr_file = create_open_file();
     char stderrPath[] = "con:";
-    if ((*errno = vfs_open(stderrPath, O_WR, 0, &stderr_file->vnode))) return -1;  
+    if (vfs_open(stderrPath, O_WRONLY, 0, &stderr_file->vnode) != 0) return NULL;  
 
     // FD_LOCK_RELEASE();
     
-    assign_fd(STDIN_FILENO, stdin_file->vnode);
-    assign_fd(STDOUT_FILENO, stdout_file->vnode);
-    assign_fd(STDERR_FILENO, stderr_file->vnode);
+    assign_fd(STDIN_FILENO, stdin_file);
+    assign_fd(STDOUT_FILENO, stdout_file);
+    assign_fd(STDERR_FILENO, stderr_file);
     fdtable->next_fd = 3;
 
     return fdtable;
@@ -307,12 +323,12 @@ static void assign_fd(fd_t fd, struct open_file *open_file) {
 }
 
 int get_free_fd(int *errno) {
-    struct file_descriptor_table *table = curproc->p_fdtable;
+    struct file_descriptor_table *fdtable = curproc->p_fdtable;
 
-    int *map = table->map;    
+    struct open_file *map[] = fdtable->map;    
 
     FD_LOCK_ACQUIRE();
-    fd_t free_fd = table->next_fd;
+    fd_t free_fd = fdtable->next_fd;
 
     if (free_fd == -1) {
         *errno = EMFILE;
@@ -325,7 +341,7 @@ int get_free_fd(int *errno) {
     do next_fd = (next_fd + 1) % OPEN_MAX;
     while (map[next_fd] != -1 && next_fd != free_fd) ; // FIXME: +1? TESTME
     
-    table->next_fd = (next_fd == free_fd) ? -1 : next_fd;
+    fdtable->next_fd = (next_fd == free_fd) ? -1 : next_fd;
     *errno = free_fd;
 
     FD_LOCK_RELEASE();

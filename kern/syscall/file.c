@@ -26,11 +26,11 @@
 #define MATCH_BITMASK(value, mask) ((value & mask) == mask)
 
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file);
-void destroy_open_file_table();
-int create_open_file_table();
-static struct open_file *create_open_file();
-static struct open_file *__allocate_open_file();
-static struct open_file_node *__create_open_file_node();
+void destroy_open_file_table(void);
+int create_open_file_table(void);
+static struct open_file *create_open_file(void);
+static struct open_file *__allocate_open_file(void);
+static struct open_file_node *__create_open_file_node(void);
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
 static void assign_fd(fd_t fd, struct open_file *open_file);
 static bool check_invalid_fd(fd_t fd);
@@ -226,8 +226,8 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
         return -1;
     }
 
-    off_t curPos = open_file->offset;
-    off_t newPos;
+    off_t curPos, newPos;
+    curPos = newPos = open_file->offset;
 
     struct stat stat; // For SEEK_END
 
@@ -477,8 +477,8 @@ static void uio_init (
             .uio_resid = len,
             .uio_segflg = UIO_USERSPACE,
             .uio_rw = rw,
-            .uio_space = rw
-    }
+            .uio_space = proc_getas() // TODO: FIXME:
+    };
 }
 
 

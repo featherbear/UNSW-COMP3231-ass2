@@ -109,7 +109,6 @@ syscall(struct trapframe *tf)
 				 (userptr_t)tf->tf_a1);
 		break;
 
-		// TODO: Fill in the switch cases as we go 
 		case SYS_open: 
 			err = sys_open((userptr_t)tf->tf_a0, tf->tf_a1, tf->tf_a2, &retval); 
 		break; 

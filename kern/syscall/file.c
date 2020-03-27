@@ -28,7 +28,7 @@
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file);
 void destroy_open_file_table();
 int create_open_file_table();
-struct open_file *create_open_file();
+static struct open_file *create_open_file();
 static struct open_file *__allocate_open_file();
 static struct open_file_node *__create_open_file_node();
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
@@ -275,7 +275,13 @@ struct file_descriptor_table *create_file_table() {
     //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
 
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
+
+    fdtable->map = (struct open_file **) kmalloc(OPEN_MAX * sizeof(struct open_file *));
+
+    // kmemset?
+    for (int i = 0; i < OPEN_MAX; i++) fdtable->map[i] = NULL;
     
+
     if (fdtable == NULL) {
         return NULL; // Let proc.c deal with this
         // return ENOMEM;
@@ -308,6 +314,8 @@ struct file_descriptor_table *create_file_table() {
 }
 
 void destroy_file_table(struct file_descriptor_table *fdtable) {
+    spinlock_cleanup(&fdtable->lock);
+    kfree(fdtable->map);
     kfree(fdtable);
 }
 
@@ -325,7 +333,7 @@ static void assign_fd(fd_t fd, struct open_file *open_file) {
 int get_free_fd(int *errno) {
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
 
-    struct open_file *map[] = fdtable->map;    
+    struct open_file **map = fdtable->map;    
 
     FD_LOCK_ACQUIRE();
     fd_t free_fd = fdtable->next_fd;
@@ -339,7 +347,7 @@ int get_free_fd(int *errno) {
     // Check for the next free file pointer
     fd_t next_fd = free_fd;
     do next_fd = (next_fd + 1) % OPEN_MAX;
-    while (map[next_fd] != -1 && next_fd != free_fd) ; // FIXME: +1? TESTME
+    while (map[next_fd] != NULL && next_fd != free_fd) ; // FIXME: +1? TESTME
     
     fdtable->next_fd = (next_fd == free_fd) ? -1 : next_fd;
     *errno = free_fd;
@@ -390,7 +398,7 @@ static struct open_file *__allocate_open_file() {
 
     open_file->flags = 0;
     open_file->vnode = NULL;
-    open_file->lock = lock_create("File lock")
+    open_file->lock = lock_create("File lock");
 
     return open_file;
 }

@@ -15,14 +15,15 @@
 #include <file.h>
 #include <syscall.h>
 #include <copyinout.h>
+#include <proc.h>
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
 #define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
-#define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock)) 
+#define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
 
 
-#define MATCH_BITMASK(value, mask) (value & mask == mask)
+#define MATCH_BITMASK(value, mask) ((value & mask) == mask)
 
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file);
 void destroy_open_file_table();
@@ -31,7 +32,7 @@ struct open_file *create_open_file();
 static struct open_file *__allocate_open_file();
 static struct open_file_node *__create_open_file_node();
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
-
+static void assign_fd(fd_t fd, struct open_file *open_file);
 
 struct open_file_table {
     struct spinlock lock;
@@ -50,15 +51,15 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     // Find an empty file descriptor number
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
-
-    // FIXME: Read copyinstr (Y) will do now 
-    char *k_filename = 
-    if ((*errno = copyinstr(...)) != 0)
+ 
+    char *k_filename = kmalloc(PATH_MAX);
+    if ((*errno = copyinstr(filename, k_filename, sizeof(k_filename), NULL)) != 0) return -1; 
  
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
-    if ((*errno = vfs_open(>>CHANGEMETOFILENAMEBUF<<, flags, mode, &open_file->vnode))) return -1;  
-    
+    if ((*errno = vfs_open(k_filename, flags, mode, &open_file->vnode))) return -1;  
+    kfree(k_filename); 
+
     // If set to O_APPEND, set ptr to end, otherwise set to 0 
     if (MATCH_BITMASK(flags, O_APPEND)) {
         struct stat stat;
@@ -83,8 +84,7 @@ int sys_close(fd_t fd, int *errno) {
     struct open_file *file;     
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
 
-    // Delegate to VFS
-    if ((*errno = vfs_close(file->vnode)) != 0) return -1; 
+    vfs_close(file->vnode); // HAHA WHOOPS
 
     assign_fd(fd, NULL);
 
@@ -290,7 +290,7 @@ void destroy_file_table(struct file_descriptor_table *fdtable) {
     kfree(fdtable);
 }
 
-void assign_fd(fd_t fd, struct open_file *open_file) {
+static void assign_fd(fd_t fd, struct open_file *open_file) {
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
      
     FD_LOCK_ACQUIRE();

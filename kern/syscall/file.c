@@ -45,7 +45,7 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     return fd;
 }
 
-int sys_close(fd_t fd, *errno) { 
+int sys_close(fd_t fd, int *errno) { 
     
     // Get the file 
     struct open_file *file;     
@@ -74,7 +74,7 @@ int sys_close(fd_t fd, *errno) {
     struct open_file_node *n = node->next; 
     p->next = n; 
     n->prev = p; 
-    // TODO: Head and Tail reassignment
+    // TODO: Head and Tail reassignment :( sorry  
     kfree(file);
     
     OF_LOCK_RELEASE();
@@ -255,7 +255,7 @@ struct file_descriptor_table *create_file_table() {
 }
 
 void destroy_file_table(struct file_descriptor_table *fdtable) {
-    kfree(curproc->p_fdtable);
+    kfree(fdtable);
 }
 
 void assign_fd(fd_t fd, struct open_file *open_file) {
@@ -301,7 +301,7 @@ int get_free_fd(int *errno) {
 /* #region OF Layer */
 
 struct open_file_table {
-    spinlock_t lock;
+    struct spinlock lock;
     struct open_file_node *head;
     struct open_file_node *tail;
 };
@@ -407,7 +407,7 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 // Stolen from Asst2 Video
 void uio_init (
         struct iovec *iov, 
-        struct iou *u, 
+        struct iou *iou, 
         userptr_t buf, 
         size_t len, 
         off_t offset, 

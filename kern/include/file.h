@@ -23,7 +23,7 @@ struct file_descriptor_table
 {
     fd_t next_fd;       // Next free file descriptor number 
     fd_t map[OPEN_MAX]; // Array of indices to the OFT
-    spinlock_t lock;    // Thread-safe lock
+    struct spinlock lock;    // Thread-safe lock
 
     // TODO: Released files should get the same fd if they are requested again
     /* 
@@ -42,7 +42,7 @@ void fd_close(fd_t fd);
 struct file_descriptor_table *create_file_table(void);
 
 /* Destroys and unlinks FD table from the current process */
-void destroy_file_table(void);
+void destroy_file_table(struct file_descriptor_table *fdtable);
 
 /* #endregion */
 

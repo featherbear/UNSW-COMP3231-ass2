@@ -206,9 +206,12 @@ It may also have any of the following flags OR'd in:
 //
 
 /* #region FD Layer */
-bool check_invalid_fd(fd_t) {
-    if fd >= 
+
+static bool check_invalid_fd(fd_t fd) {
+    return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
 }
+
+
 struct file_descriptor_table *create_file_table() {
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
     
@@ -364,7 +367,7 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
 
-    if (fd >= OPEN_MAX || (*open_file = fdtable->map[fd]) == NULL) {
+    if (check_invalid_fd(fd) || (*open_file = fdtable->map[fd]) == NULL) {
         return EBADF;
     }
 

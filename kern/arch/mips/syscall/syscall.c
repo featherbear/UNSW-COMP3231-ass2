@@ -117,11 +117,11 @@ syscall(struct trapframe *tf)
 			break; 
 
 		case SYS_read:  
-			err = sys_read(tf->tf_a0, (userptr_t)tf->tf_a1, tf->tf_a2, &retval); 
+			retval = sys_read(tf->tf_a0, (userptr_t)tf->tf_a1, tf->tf_a2, &err); 
 			break;
 
 		case SYS_write: 
-			err = sys_write(tf->tf_a0, (userptr_t)tf->tf_a1, tf->tf_a2, &retval); 
+			retval = sys_write(tf->tf_a0, (userptr_t)tf->tf_a1, tf->tf_a2, &err); 
 			break;
 
 		case SYS_lseek: 
@@ -131,7 +131,7 @@ syscall(struct trapframe *tf)
 			int whence;
 			copyin((userptr_t) tf->tf_sp + 16, &whence, sizeof(int));
 
-			off_t newPosition = sys_dup2(tf->tf_a0, pos, whence, &retval);
+			off_t newPosition = sys_lseek(tf->tf_a0, pos, whence, &err);
 			if (newPosition == -1) err = retval;
 									 // v0 assigned to retval below
 			split64to32(newPosition, &retval, &tf->tf_v1);

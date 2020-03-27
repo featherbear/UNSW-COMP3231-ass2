@@ -14,6 +14,7 @@
 #include <vnode.h>
 #include <file.h>
 #include <syscall.h>
+#include <spinlock.h>
 #include <copyinout.h>
 
 
@@ -140,7 +141,6 @@ int sys_read(int fd, userptr_t buf, int buflen, int *retval) {
         // fill in the uio details 
     }
     
-    //messenger !!!
     
     // Call VOP to do the reading 
     e = VOP_READ(file->vnode, new_uio); 
@@ -270,12 +270,18 @@ int get_free_fd(int *retval) {
 
 /* #region OF Layer */
 
+struct open_file_table {
+    spinlock_t lock;
+    struct open_file_node *head;
+    struct open_file_node *tail;
+};
 
 struct open_file_node {
     struct open_file_node *prev;
     struct open_file_node *next;
     struct open_file *entry;
 }
+
 
 
 int create_open_file_table() {
@@ -288,10 +294,18 @@ int create_open_file_table() {
         return ENOMEM;
     }
 
+    spinlock_init(&open_file_table->lock);
+    open_file_table->head = NULL;
+    open_file_table->tail = NULL;
+
     return 0;
 }
 
-void destroy_open_file_table();
+void destroy_open_file_table() {
+    // TODO: Should we free the nodes?
+    spinlock_cleanup(&open_file_table->lock)
+    kfree(open_file_table);
+}
 
 /* #endregion */
 

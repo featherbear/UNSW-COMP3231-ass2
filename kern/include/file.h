@@ -56,13 +56,10 @@ struct open_file {
     int flags;           // Access flags
     struct vnode *vnode; // Pointer to the VFS node
     struct lock *lock;   // Shared access 
+    void *reference;      // Reference to the open_file_node ADT
 };
 
-struct open_file_table {
-    spinlock_t lock;
-    struct open_file_node *head;
-};
-
+struct open_file_table;
 struct open_file_table *open_file_table = NULL; // Define our global value here
 
 /* Initialise the global open file table */

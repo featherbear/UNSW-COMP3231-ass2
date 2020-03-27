@@ -25,17 +25,17 @@
  * Return ENOSYS for any possible coding errors for debugging purposes.
 */
 
-fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) { 
+fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
     
     fd_t fd;
-    if ((*retval = get_free_fd(&fd)) != 0) {
+    if ((*errno = get_free_fd(&fd)) != 0) {
         kprint("Error with function: get_free_fd()\n"); 
         return -1;
     } 
 
     struct open_file *open_file = create_open_file();
 
-    if ((*retval = vfs_open(filename, flags, mode, &open_file->vnode))) { 
+    if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) { 
         return -1;  
     }
 
@@ -48,17 +48,17 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
     
 }
 
-int sys_close(fd_t fd, *retval) { 
+int sys_close(fd_t fd, *errno) { 
     
     // Get the file 
     struct open_file *file;     
-    if ((*retval = get_open_file_from_fd(fd, &file)) != 0) {
+    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) {
         return -1;
     }
 
     lock_acquire(file->lock); /////////////////////////
 
-    if ((*retval = vfs_close(file->vnode)) != 0) { 
+    if ((*errno = vfs_close(file->vnode)) != 0) { 
         return -1; 
     }
 
@@ -206,7 +206,9 @@ It may also have any of the following flags OR'd in:
 //
 
 /* #region FD Layer */
-
+bool check_invalid_fd(fd_t) {
+    if fd >= 
+}
 struct file_descriptor_table *create_file_table() {
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
     

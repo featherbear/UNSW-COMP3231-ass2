@@ -283,7 +283,9 @@ struct open_file_node {
 }
 
 struct open_file *create_open_file() {
+    struct open_file_node *file
     spinlock_acquire(&open_file_table->lock);
+
     spinlock_release(&open_file_table->lock);
 }
 

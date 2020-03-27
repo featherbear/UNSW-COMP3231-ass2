@@ -22,7 +22,7 @@
 #define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
 
 /* 
- * Return ENOSYS for any possible coding errors for debugging purposes.
+    Return ENOSYS for any possible coding errors for debugging purposes.
 */
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
@@ -122,7 +122,10 @@ int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) {
         u->uio_iov = iov; 
         u->uio_iovcnt = 1; 
         u->uio_offset = offset; 
-        u->
+        u->uio_resid = len; 
+        u->uio_segflg = UIO_USERSPACE; 
+        u->uio_rw = rw; 
+        u->uio_space = proc_getas(); 
         
         // fill in the uio details 
     }
@@ -203,6 +206,13 @@ It may also have any of the following flags OR'd in:
 }
 
 
+off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
+    if (whence != SEEK_SET && whence != SEEK_CUR && whence != SEEK_END) {
+        *errno = EINVAL;
+        return -1;
+    }
+}
+
 //
 
 /* #region FD Layer */
@@ -243,7 +253,7 @@ void assign_fd(fd_t fd, struct open_file *open_file) {
     spinlock_release(&fdtable->lock);
 }
 
-int get_free_fd(int *retval) {
+int get_free_fd(int *errno) {
     struct file_descriptor_table *table = curproc->p_fdtable;
 
     int *map = table->map;    
@@ -252,7 +262,7 @@ int get_free_fd(int *retval) {
     fd_t free_fd = table->next_fd;
 
     if (free_fd == -1) {
-        *retval = EMFILE;
+        *errno = EMFILE;
         FD_LOCK_RELEASE();
         return -1;
     }
@@ -263,7 +273,7 @@ int get_free_fd(int *retval) {
     while (map[next_fd] != -1 && next_fd != free_fd) ; // FIXME: +1?
     
     table->next_fd = (next_fd == free_fd) ? -1 : next_fd;
-    *retval = free_fd;
+    *errno = free_fd;
 
     FD_LOCK_RELEASE();
 

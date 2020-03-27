@@ -14,7 +14,6 @@
 #include <vnode.h>
 #include <file.h>
 #include <syscall.h>
-#include <spinlock.h>
 #include <copyinout.h>
 
 
@@ -30,11 +29,8 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
         return -1;
     } 
 
-    // TODO: Assign the FD
     // TODO: Should be in another function // What should be in another function? 
-    // TODO: Assign the OD
 
-    // Allocate the file on the OF_TABLE 
     struct open_file *open_file = create_open_file();
     
     if ((*retval = vfs_open(filename, flags, mode, &open_file->vnode))) { 
@@ -209,12 +205,16 @@ struct file_descriptor_table *create_file_table() {
     }
 
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
+    
+    if (fdtable == NULL) {
+        return ENOMEM;
+    }
 
+    spinlock_init(&fdtable->lock);
     fdtable->map[0] = STDIN_FILENO;
     fdtable->map[1] = STDOUT_FILENO;
     fdtable->map[2] = STDERR_FILENO;
     fdtable->next_fd = 3; // 0, 1, 2 are used for STDIN, STDOUT, STDERR
-
     // TODO: Assignment call
     // TODO: Create FD->OF->STDIO
 
@@ -232,8 +232,13 @@ void destroy_file_table() {
     curproc->p_fdtable = NULL;
 }
 
-void assign_fd(int fd) {
-    
+void assign_fd(fd_t fd, struct open_file *open_file) {
+    struct file_descriptor_table *fdtable = curproc->p_fdtable;
+     
+    spinlock_acquire(&fdtable->lock);
+    // TODO: Check if it used?
+    fdtable->map[fd] = open_file;
+    spinlock_release(&fdtable->lock);
 }
 
 fd_t get_free_fd(int *retval) {

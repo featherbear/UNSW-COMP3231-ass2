@@ -36,13 +36,13 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
 
-    // Create a new struct OPEN_FILE 
+    // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
     if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) return -1;  
     open_file->offset = 0;
     open_file->flags = flags;
 
-    // 
+    // Table Management for of_table
     assign_fd(fd, open_file);
     
     return fd;
@@ -65,6 +65,7 @@ int sys_close(fd_t fd, *errno) {
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
+
     FD_LOCK_RELEASE();
 
     // Check other references to the vnode - remove from OF table if all references have finished.
@@ -81,12 +82,12 @@ int sys_close(fd_t fd, *errno) {
 }
 
 fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
-    if (check_invalid_fd(oldfd) || check_invalid_fd(newfd)) {
+    if (check_invalid_fd(oldfd) | check_invalid_fd(newfd)) {
         *errno = EBADF;
         return -1;
     }
 
-    // Check if newfd is open, if so then close
+    // Check if `newfd` is open, if so then close
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
     if (fdtable->map[newfd] != NULL && sys_close(newfd, errno) != 0) {
         return -1;
@@ -101,9 +102,7 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     
     // Get the file 
     struct open_file *file; 
-    if ((*errno = get_open_file_from_fd(fd, &file))) != 0) {
-        return -1;
-    }
+    if ((*errno = get_open_file_from_fd(fd, &file))) != 0) return -1;
 
     // Check the permissions 
     int flags = file->flags;  
@@ -113,15 +112,12 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     } 
 
     // Prepare the uio 
-    struct iovev new_iov; 
+    struct iovev new_iov; // TODO: What's this?
     struct uio *new_uio; 
+                                              // v TODO: Should this be file->fp chang
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
-
-
-    // Call VOP to do the reading 
-    if ((*retval = VOP_READ(file->vnode, new_uio)) != 0) { 
-        return -1; 
-    } 
+    
+    if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) return -1; 
 
     // Success
     return 0;     
@@ -132,36 +128,29 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     
     // Get the file 
     struct open_file *file; 
-    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) {
-        return -1;
-    }   
+    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
 
-    // Check if we have the permission 
+    // Check if we have permission to write
     int flags = file->flags; 
-
-    if (!MATCH_BIMASK(flags, O_WRONLY) && !MATCH_BITMASK(flags, O_RDWR) {
+    if (!MATCH_BIMASK(flags, O_WRONLY) && !MATCH_BITMASK(flags, O_RDWR)) {
         *errno = EPERM; 
         return -1; 
     }
 
-    // Copy in the data from User-land into Kernel-land 
-    char *kernel_buf = malloc(sizeof(buflen)); 
-    e = copyin(buf, kernel_buf, sizeof(kernel_buf)); 
-    if (e) {  
-
-        // Handles potential EFAULT (Address error of buf ptr)
-        *retval = e; 
-        return -1; 
-    } 
+    // Copy data from User-land into Kernel-land 
+    char *kernel_buf = malloc(sizeof(buflen)); // FIXME: kmalloc
+    if ((*errno = copyin(buf, kernel_buf, sizeof(kernel_buf)) != 0) return -1; 
 
     // Prepare the uio 
-    struct iovev new_iov; 
+    struct iovec new_iov; 
     struct uio *new_uio; 
-    uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
+    uio_init(&new_iov, &new_uio, buf, sizeof(kernel_buf), file->offset, UIO_READ);
 
-
-    
-
+    FILE_LOCK_AQCUIRE() 
+    if ((*errno = VOP_WRITE(f->vnode, &new_uio)) != 0) { 
+        FILE_LOCK_RELEASE()
+        return -1;     
+    } 
 
 
 
@@ -171,21 +160,10 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         How should we implement this. 
     */ 
 
-
-
-
-/* 
-The flags argument should consist of one of
- 	    O_RDONLY	Open for reading only.
-        O_WRONLY	Open for writing only.
-        O_RDWR	Open for reading and writing.
-It may also have any of the following flags OR'd in:
-        O_CREAT	Create the file if it doesn't exist.
-        O_EXCL	Fail if the file already exists.
-        O_TRUNC	Truncate the file to length 0 upon open.
-        O_APPEND	Open the file in append mode.
-        O_EXCL is only meaningful if O_CREAT is also used.
-*/
+    file->
+    FILE_LOCK_RELEASE()
+    // Success
+    return 0 
 }
 
 

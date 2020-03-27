@@ -26,20 +26,22 @@
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
-    // Find an empty file descriptor no.
+    // Find an empty file descriptor number
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
 
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
     if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) return -1;  
-    open_file->offset = 0;
+    
+    // open_file->offset = 0;
+    // TODO: Possible :: open_file->offset = MATCH_BITMASK(flags, O_APPEND) ? VOP_STAT(open_file->vnode) : 0;
+
     open_file->flags = flags;
 
     // Map file descriptor to the open file
     assign_fd(fd, open_file);
     
-    // Success
     return fd;
 }
 
@@ -61,14 +63,16 @@ int sys_close(fd_t fd, *errno) {
     }
     FD_LOCK_RELEASE();
 
-    // Check other references to the vnode - remove from OF table if all references have finished.
-    OF_LOCK_ACQUIRE();
-    // TODO:
-    // Destroy node
-    // Destroy DLL linked list
-    // // Move prev and next ptrs
-    OF_LOCK_RELEASE();
+    // TODO: Check other references to the vnode - remove from OF table if all references have finished.
 
+    OF_LOCK_ACQUIRE();
+    struct open_file *p = file->prev; 
+    struct open_file *n = file->next; 
+    p->next = n; 
+    n->prev = p; 
+    
+    kfree(file); 
+    OF_LOCK_RELEASE();
 
     // Success 
     return 0; 
@@ -219,6 +223,23 @@ struct file_descriptor_table *create_file_table() {
 
     spinlock_init(&fdtable->lock);
 
+    struct open_file *stdout_file = create_open_file();
+    char stdoutPath[] = "con:";
+    if ((*errno = vfs_open(stdoutPath, O_WR, 0, &stdout_file->vnode))) return -1;  
+
+
+    struct open_file *stdout_file = create_open_file();
+    char stdoutPath[] = "con:";
+    if ((*errno = vfs_open(stdoutPath, O_WR, 0, &stdout_file->vnode))) return -1;  
+
+
+    struct open_file *stderr_file = create_open_file();
+    char stderrPath[] = "con:";
+    if ((*errno = vfs_open(stderrPath, O_WR, 0, &stderr_file->vnode))) return -1;  
+
+
+
+    
     assign_fd(1, )
     assign_fd(2, )
     // fdtable->map[0] = STDIN_FILENO;

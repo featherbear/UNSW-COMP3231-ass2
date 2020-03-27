@@ -29,10 +29,8 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
         return -1;
     } 
 
-    // TODO: Should be in another function // What should be in another function? 
-
     struct open_file *open_file = create_open_file();
-    
+
     if ((*retval = vfs_open(filename, flags, mode, &open_file->vnode))) { 
         return -1;  
     }
@@ -40,38 +38,48 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *retval) {
     open_file->fp = 0;
     open_file->flags = flags;
 
+    assign_fd(fd, open_file);
+
     return fd;
     
-} 
+}
+
+#define FD_LOCK_ACQUIRE (spinlock_acquire(&curproc->p_fdtable->lock))
+#define FD_LOCK_RELEASE (spinlock_release(&curproc->p_fdtable->lock))
+#define OF_LOCK_ACQUIRE (spinlock_acquire(&open_file_table->lock))
+#define OF_LOCK_RELEASE (spinlock_release(&open_file_table->lock))
+
 /* #region sys_close */
 int sys_close(fd_t fd, *retval) { 
     
     // Get the file 
-    struct open_file *file; 
-    
-    *retval = get_open_file_from_fd(fd, &file);
-    if (*retval != 0) {
+    struct open_file *file;     
+    if ((*retval = get_open_file_from_fd(fd, &file)) != 0) {
         return -1;
     }
 
-    lock_acquire(file->lock);
-    // TODO: RELEASE THE LOCK
+    lock_acquire(file->lock); /////////////////////////
 
-    // Clean the vnode
-    struct vnode *vn = file->vnode; 
-    int e = vfs_close(vn); 
-    if (e) { 
-        retval = e; 
+    if ((*retval = vfs_close(file->vnode;)) != 0) { 
         return -1; 
     }
 
+    FD_LOCK_ACQUIRE;
+    assign_fd(fd, NULL);
 
-    // TODO: Check other references to the vnode - remove from OF table if all references have finished.
-    
     // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
+    FD_LOCK_RELEASE;
+
+    // Check other references to the vnode - remove from OF table if all references have finished.
+    OF_LOCK_ACQUIRE;
+    // Destroy node
+    // Destroy DLL linked list
+    // // Move prev and next ptrs
+    OF_LOCK_RELEASE;
+
 
     // Success 
     return 0; 
@@ -80,8 +88,6 @@ int sys_close(fd_t fd, *retval) {
 
 int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) { 
     
-    int e;
-
     // Get the file 
     struct open_file *file; 
 
@@ -125,9 +131,7 @@ int sys_read(fd_t fd, userptr_t buf, int buflen, int *retval) {
     
     
     // Call VOP to do the reading 
-    e = VOP_READ(file->vnode, new_uio); 
-    if (e) { 
-        *retval = e; 
+    if ((*retval = VOP_READ(file->vnode, new_uio)) != 0) { 
         return -1; 
     } 
 

@@ -24,18 +24,50 @@
 
 #define MATCH_BITMASK(value, mask) (value & mask == mask)
 
+int get_open_file_from_fd(fd_t fd, struct open_file **open_file);
+void destroy_open_file_table();
+int create_open_file_table();
+struct open_file *create_open_file();
+static struct open_file *__allocate_open_file();
+static struct open_file_node *__create_open_file_node();
+static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
+
+
+struct open_file_table {
+    struct spinlock lock;
+    struct open_file_node *head;
+    struct open_file_node *tail;
+};
+
+struct open_file_node {
+    struct open_file_node *prev;
+    struct open_file_node *next;
+    struct open_file *entry;
+};
+
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
     // Find an empty file descriptor number
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
 
+    // FIXME: Read copyinstr (Y) will do now 
+    char *k_filename = 
+    if ((*errno = copyinstr(...)) != 0)
+ 
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
-    if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) return -1;  
+    if ((*errno = vfs_open(>>CHANGEMETOFILENAMEBUF<<, flags, mode, &open_file->vnode))) return -1;  
     
     // If set to O_APPEND, set ptr to end, otherwise set to 0 
-    open_file->offset = MATCH_BITMASK(flags, O_APPEND) ? VOP_STAT(open_file->vnode) : 0;
+    if (MATCH_BITMASK(flags, O_APPEND)) {
+        struct stat stat;
+        VOP_STAT(open_file->vnode, &stat);
+        open_file->offset = stat.st_size;
+    } else {
+        open_file->offset = 0;
+    }
+    
 
     open_file->flags = flags;
 
@@ -300,17 +332,7 @@ int get_free_fd(int *errno) {
 
 /* #region OF Layer */
 
-struct open_file_table {
-    struct spinlock lock;
-    struct open_file_node *head;
-    struct open_file_node *tail;
-};
 
-struct open_file_node {
-    struct open_file_node *prev;
-    struct open_file_node *next;
-    struct open_file *entry;
-}
 
 static struct open_file_node *__create_open_file_node() {
     struct open_file_node *open_file_node = kmalloc(sizeof(*open_file_node));
@@ -352,7 +374,7 @@ static struct open_file *__allocate_open_file() {
     return open_file;
 }
 
-struct open_file *create_open_file() {
+static struct open_file *create_open_file() {
     struct open_file_node *open_file_node = __create_open_file_node();
     struct open_file *open_file = __allocate_open_file();
 
@@ -405,9 +427,9 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 /* #endregion */
 
 // Stolen from Asst2 Video
-void uio_init (
+static void uio_init (
         struct iovec *iov, 
-        struct iou *iou, 
+        struct uio *uio, 
         userptr_t buf, 
         size_t len, 
         off_t offset, 
@@ -419,7 +441,7 @@ void uio_init (
         .iov_len = len
     };
 
-    *iou = (struct iou) {
+    *uio = (struct uio) {
             .uio_iov = iov,
             .uio_iovcnt = 1,
             .uio_offset = offset,
@@ -429,3 +451,5 @@ void uio_init (
             .uio_space = rw
     }
 }
+
+

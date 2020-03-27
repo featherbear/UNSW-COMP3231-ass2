@@ -82,6 +82,7 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file);
 /* #region File Operations */
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno);
+int sys_close(fd_t fd, int *errno); 
 int sys_read(fd_t fd, userptr_t buf, int buflen, int *errno);
 int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno);
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno);

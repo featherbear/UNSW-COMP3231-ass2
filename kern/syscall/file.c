@@ -21,38 +21,26 @@
 #define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
 #define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock)) 
 
-// !ignore WARN_LOCAL
-#define FILE_LOCK_ACQUIRE() (lock_acquire(file->lock))
-#define FILE_LOCK_RELEASE() (lock_release(file->lock))
 
 #define MATCH_BITMASK(value, mask) (value & mask == mask)
 
-// Thought we need this but apparently not FIXME 
-// void uio_init (struct iovec *iov, struct iou *u, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
-
-
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
-    // Find an empty file descriptor number
+    // Find an empty file descriptor no.
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
 
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
     if ((*errno = vfs_open(filename, flags, mode, &open_file->vnode))) return -1;  
-    
-    
     open_file->offset = 0;
-    // TODO: Append flag would set this to the end
-    // open_file->offset = MATCH_BITMASK(flags, O_APPEND) ? VOP_STAT(open_file) : 0;
-    
     open_file->flags = flags;
 
-    // Map the file descriptor to the new `struct open_file`
+    // Table Management for of_table
     assign_fd(fd, open_file);
     
+    // Success
     return fd;
-    
 }
 
 int sys_close(fd_t fd, *errno) { 
@@ -67,7 +55,7 @@ int sys_close(fd_t fd, *errno) {
     assign_fd(fd, NULL);
 
     FD_LOCK_ACQUIRE();
-    // If there were no free fd's, assign the next fd to be the removed fd
+    // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
@@ -118,7 +106,7 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
     // Prepare the uio 
     struct iovec new_iov;
-    struct uio *new_uio; 
+    struct uio new_uio; 
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
     
     if ((*errno = VOP_READ(file->vnode, new_uio)) != 0) return -1; 
@@ -147,24 +135,21 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
     // Prepare the uio 
     struct iovec new_iov; 
-    struct uio *new_uio; 
-    uio_init(&new_iov, &new_uio, buf, sizeof(kernel_buf), file->offset, UIO_READ);
+    struct uio new_uio; 
+    uio_init(&new_iov, &new_uio, buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
 
-    FILE_LOCK_ACQUIRE() 
-    if ((*errno = VOP_WRITE(f->vnode, &new_uio)) != 0) { 
-        
+    lock_acquire(file->lock);
+    if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) { 
+
         // Covers the case where no free space is left on the file (ENOSPC) 
-        FILE_LOCK_RELEASE()
+        lock_release(file->lock);
         return -1;     
-    } 
-
+    }
     file->offset += sizeof(kernel_buf); 
-    FILE_LOCK_RELEASE()
-    
+    lock_release(file->lock);
     // Success
     return 0 
 }
-
 
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
     switch (whence) {
@@ -184,11 +169,11 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
         return -1;
     }
 
-
     off_t curPos = open_file->offset;
     off_t newPos;
 
     switch (whence) {
+
         case SEEK_SET:
             newPos = pos;
             break;
@@ -205,13 +190,9 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
         return -1;
     }
 
-    open_file->offset = newPos;
-
-    return newPos;
-    
+    // Success
+    return newPos;    
 }
-
-//
 
 /* #region FD Layer */
 
@@ -270,7 +251,7 @@ int get_free_fd(int *errno) {
     // Check for the next free file pointer
     fd_t next_fd = free_fd;
     do next_fd = (next_fd + 1) % OPEN_MAX;
-    while (map[next_fd] != -1 && next_fd != free_fd) ; // FIXME: +1?
+    while (map[next_fd] != -1 && next_fd != free_fd) ; // FIXME: +1? TESTME
     
     table->next_fd = (next_fd == free_fd) ? -1 : next_fd;
     *errno = free_fd;
@@ -365,7 +346,7 @@ int create_open_file_table() {
 }
 
 void destroy_open_file_table() {
-    // TODO: Should we free the nodes?
+    // TODO: Should we free the nodes? 
     KASSERT(open_file_table->head == NULL && open_file_table->tail == NULL);
     spinlock_cleanup(&open_file_table->lock);
     kfree(open_file_table);
@@ -391,31 +372,39 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 // Stolen from Asst2 Video
 void uio_init (
         struct iovec *iov, 
-        struct iou *iou, 
+        struct iou *u, 
         userptr_t buf, 
         size_t len, 
         off_t offset, 
         enum uio_rw rw
     ) {
 
-*iov = (struct iovec) {
-    .iov_ubase = buf,
-    .iov_len = len
-};
-
-*iou = (struct iou) {
-        .uio_iov = iov,
-        .uio_iovcnt = 1,
-        .uio_offset = offset,
-        .uio_resid = len,
-        .uio_segflg = UIO_USERSPACE,
-        .uio_rw = rw,
-        .uio_space = rw
-}
-
-
-     
-    
-    
+    // { 
+    //     iov->iov_ubase = buf; 
+    //     iov->iov_len = len; 
+    //     u->uio_iov = iov; 
+    //     u->uio_iovcnt = 1; 
+    //     u->uio_offset = offset; 
+    //     u->uio_resid = len; 
+    //     u->uio_segflg = UIO_USERSPACE; 
+    //     u->uio_rw = rw; 
+    //     u->uio_space = rw, 
         
+    // }
+
+    
+    *iov = (struct iovec) {
+        .iov_ubase = buf,
+        .iov_len = len
+    };
+
+    *iou = (struct iou) {
+            .uio_iov = iov,
+            .uio_iovcnt = 1,
+            .uio_offset = offset,
+            .uio_resid = len,
+            .uio_segflg = UIO_USERSPACE,
+            .uio_rw = rw,
+            .uio_space = rw
+    }
 }

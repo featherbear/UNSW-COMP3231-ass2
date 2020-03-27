@@ -208,10 +208,6 @@ It may also have any of the following flags OR'd in:
 /* #region FD Layer */
 
 struct file_descriptor_table *create_file_table() {
-    // if (curproc->p_fdtable != NULL) {
-    //     KASSERT(0);
-    // }
-
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
     
     if (fdtable == NULL) {
@@ -226,18 +222,11 @@ struct file_descriptor_table *create_file_table() {
     // TODO: Assignment call
     // TODO: Create FD->OF->STDIO
 
-    // curproc->p_fdtable = fdtable;
-    
     return fdtable;
 }
 
-void destroy_file_table() {
-    if (curproc->p_fdtable == NULL) {
-        KASSERT(0);
-    }
-    
+void destroy_file_table(struct file_descriptor_table *fdtable) {
     kfree(curproc->p_fdtable);
-    curproc->p_fdtable = NULL;
 }
 
 void assign_fd(fd_t fd, struct open_file *open_file) {

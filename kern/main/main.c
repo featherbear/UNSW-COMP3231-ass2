@@ -138,7 +138,6 @@ boot(void)
 
 	kheap_nextgeneration();
 
-
 	/*
 	 * Make sure various things aren't screwed up.
 	 */

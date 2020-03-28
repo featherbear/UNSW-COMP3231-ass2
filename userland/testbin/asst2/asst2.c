@@ -14,14 +14,19 @@ char buf[MAX_BUF];
 int
 main(int argc, char * argv[])
 {
-(void) argc;
-(void) argv;
+        int fd, r, i, j , k;
+        (void) argc;
+        (void) argv;
 
-write(1, "hello", 5);
+        printf("\n**********\n* File Tester\n");
 
-//        printf("\n**********\n* File Tester\n");
+        snprintf(buf, MAX_BUF, "**********\n* write() works for stdout\n");
+        write(1, buf, strlen(buf));
+        snprintf(buf, MAX_BUF, "**********\n* write() works for stderr\n");
+        write(2, buf, strlen(buf));
 
-/*
+        printf("**********\n* opening new file \"test.file\"\n");
+        fd = open("test.file", O_RDWR | O_CREAT, 0700); /* mode u=rw in octal */
         printf("* open() got fd %d\n", fd);
         if (fd < 0) {
                 printf("ERROR opening file: %s\n", strerror(errno));
@@ -116,7 +121,7 @@ write(1, "hello", 5);
         printf("* file lseek  okay\n");
         printf("* closing file\n");
         close(fd);
-*/
+
         return 0;
 }
 

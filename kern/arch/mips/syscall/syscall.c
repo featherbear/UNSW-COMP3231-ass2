@@ -32,6 +32,8 @@
 #include <kern/syscall.h>
 #include <lib.h>
 #include <mips/trapframe.h>
+#include <endian.h>
+#include <copyinout.h>
 #include <thread.h>
 #include <current.h>
 #include <syscall.h>
@@ -127,13 +129,11 @@ syscall(struct trapframe *tf)
 			break;
 
 		case SYS_lseek: 
-			call_sys_lseek(struct trapframe *tf, int32_t *retval, int *err);
-
-			
+			call_sys_lseek(tf, &retval, &err);
 			break; 
 
 		case SYS_dup2: 
-			retval = sys_dup2(tf->tf_a0, tf->tf_a2, &e);
+			retval = sys_dup2(tf->tf_a0, tf->tf_a2, &err);
 			break; 
 
 		default:
@@ -172,16 +172,16 @@ syscall(struct trapframe *tf)
 }
 
 static void call_sys_lseek(struct trapframe *tf, int32_t *retval, int *err) {
-	off_t pos;
+	uint64_t pos;
 	join32to64(tf->tf_a2, tf->tf_a3, &pos);
 	
 	int whence;
-	copyin((userptr_t) tf->tf_sp + 16, &whence, sizeof(int));
+	copyin((userptr_t) tf->tf_sp + 16, &whence, sizeof(int)); // FIXME: copyin() unknown/not working
 
-	off_t newPosition = sys_lseek(tf->tf_a0, pos, whence, &err);
+	off_t newPosition = sys_lseek(tf->tf_a0, pos, whence, err);
 
-								// v0 assigned to retval below
-	split64to32(newPosition, *retval, &tf->tf_v1);
+							 // v0 assigned to retval below
+	split64to32(newPosition, (uint32_t *) retval, &tf->tf_v1);
 }
 /*
  * Enter user mode for a newly forked process.

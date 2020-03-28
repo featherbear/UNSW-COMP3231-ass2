@@ -85,12 +85,12 @@ int sys_close(fd_t fd, int *errno) {
     struct open_file *file;     
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
 
-    vfs_close(file->vnode); // HAHA WHOOPS
-
+    vfs_close(file->vnode);
     assign_fd(fd, NULL);
 
     FD_LOCK_ACQUIRE();
     // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
+    // TODO: Move this part into assign_fd(...)?
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
@@ -106,8 +106,7 @@ int sys_close(fd_t fd, int *errno) {
     struct open_file_node *p = node->prev; 
     struct open_file_node *n = node->next; 
     p->next = n; 
-    n->prev = p; 
-    // TODO: Head and Tail reassignment :( sorry  
+    n->prev = p;   
     kfree(file);
     
     OF_LOCK_RELEASE();

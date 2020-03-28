@@ -16,7 +16,7 @@ main(int argc, char * argv[])
 {
 (void) argc;
 (void) argv;
-        printf("\n**********\n* File Tester\n");
+//        printf("\n**********\n* File Tester\n");
 
 /*
         printf("* open() got fd %d\n", fd);

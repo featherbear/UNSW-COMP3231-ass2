@@ -1,6 +1,8 @@
 #ifndef ___OPEN_FILE_TABLE_H_
 #define ___OPEN_FILE_TABLE_H_
 
+#include <types.h>
+
 #define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
 #define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
 

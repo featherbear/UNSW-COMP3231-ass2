@@ -2,6 +2,11 @@
 #define ___FILE_DESCRIPTOR_TABLE_H_
 
 #include <types.h>
+#include <kern/errno.h>
+#include <lib.h>
+#include <spinlock.h>
+#include <current.h>
+#include <proc.h>
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(*(&curproc->p_fdtable->lock)))
 #define FD_LOCK_RELEASE() (spinlock_release(*(&curproc->p_fdtable->lock)))

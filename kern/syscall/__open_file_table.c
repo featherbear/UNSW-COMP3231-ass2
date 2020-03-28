@@ -1,3 +1,4 @@
+#include <kern/errno.h>
 #include <__open_file_table.h>
 
 static struct open_file *create_open_file(void);

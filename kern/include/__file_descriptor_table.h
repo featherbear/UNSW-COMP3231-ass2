@@ -1,6 +1,7 @@
 #ifndef ___FILE_DESCRIPTOR_TABLE_H_
 #define ___FILE_DESCRIPTOR_TABLE_H_
 
+#include <types.h>
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(*(&curproc->p_fdtable->lock)))
 #define FD_LOCK_RELEASE() (spinlock_release(*(&curproc->p_fdtable->lock)))

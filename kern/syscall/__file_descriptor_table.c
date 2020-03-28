@@ -1,28 +1,27 @@
 #include <__file_descriptor_table.h>
 #include <__open_file_table.h>
 
-#include <types.h>
-#include <kern/errno.h>
-#include <kern/fcntl.h>
-#include <kern/limits.h>
-#include <kern/stat.h>
-#include <kern/seek.h>
-#include <kern/unistd.h>
-#include <stat.h>
-#include <lib.h>
-#include <uio.h>
-#include <thread.h>
-#include <current.h>
-#include <synch.h>
-#include <vfs.h>
-#include <vnode.h>
-#include <file.h>
-#include <syscall.h>
-#include <copyinout.h>
-#include <proc.h>
-#include <stat.h>
-#include <uio.h>
-#include <current.h>
+// #include <kern/errno.h>
+// #include <kern/fcntl.h>
+// #include <kern/limits.h>
+// #include <kern/stat.h>
+// #include <kern/seek.h>
+// #include <kern/unistd.h>
+// #include <stat.h>
+// #include <lib.h>
+// #include <uio.h>
+// #include <thread.h>
+// #include <current.h>
+// #include <synch.h>
+// #include <vfs.h>
+// #include <vnode.h>
+// #include <file.h>
+// #include <syscall.h>
+// #include <copyinout.h>
+// #include <proc.h>
+// #include <stat.h>
+// #include <uio.h>
+// #include <current.h>
 
 
 // TODO: Meta

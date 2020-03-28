@@ -287,8 +287,12 @@ struct file_descriptor_table *create_file_table() {
 
     spinlock_init(&fdtable->lock);
 
+    create_open_file();
+/*
     // FD_LOCK_ACQUIRE();
     struct open_file *stdin_file = create_open_file();
+
+
     char stdinPath[] = "con:";
     if (vfs_open(stdinPath, O_RDONLY, 0, &stdin_file->vnode) != 0) return NULL;  
 
@@ -307,7 +311,7 @@ struct file_descriptor_table *create_file_table() {
     assign_fd(STDOUT_FILENO, stdout_file);
     assign_fd(STDERR_FILENO, stderr_file);
     fdtable->next_fd = 3;
-
+*/
     return fdtable;
 }
 
@@ -370,6 +374,8 @@ static struct open_file_node *__create_open_file_node() {
         KASSERT(0);
     }
 
+    return NULL;
+
     open_file_node->prev = NULL;
     open_file_node->next = NULL;
     open_file_node->entry = NULL;
@@ -402,11 +408,15 @@ static struct open_file *__allocate_open_file() {
 
     return open_file;
 }
-
+ 
 static struct open_file *create_open_file() {
     struct open_file_node *open_file_node = __create_open_file_node();
-    struct open_file *open_file = __allocate_open_file();
 
+    if (open_file_node == NULL) {}
+    return NULL;
+
+    struct open_file *open_file = __allocate_open_file();
+    // nice debigging :)  :) :) :) :) :) 
     open_file_node->entry = open_file;
     open_file->reference = open_file_node;
 
@@ -414,16 +424,15 @@ static struct open_file *create_open_file() {
 }
 
 int create_open_file_table() {
-    if (open_file_table != NULL) {
-        return ENOSYS;
-    } 
+
+    // Only one global open_file_table shoud exist
+    if (open_file_table != NULL) return ENOSYS; 
     
     open_file_table = kmalloc(sizeof(struct open_file_table));
     bzero(open_file_table, sizeof(struct open_file_table));
-    
-    if (open_file_table == NULL) {
-        return ENOMEM;
-    }
+
+    if (open_file_table == NULL) return ENOMEM;
+
 
     spinlock_init(&open_file_table->lock);
     open_file_table->head = NULL;
@@ -433,7 +442,7 @@ int create_open_file_table() {
 }
 
 void destroy_open_file_table() {
-    // TODO: Should we free the nodes? 
+    // TODO: Should we free the nodes? Probably? We had to do that in our labs didn't we.
     KASSERT(open_file_table->head == NULL && open_file_table->tail == NULL);
     spinlock_cleanup(&open_file_table->lock);
     kfree(open_file_table);
@@ -443,6 +452,7 @@ void destroy_open_file_table() {
 
 /* #region File Helpers */
 
+/* Retrieves `open_file` from given fd#. If invalid, return EBADF */
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
@@ -456,7 +466,6 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
 /* #endregion */
 
-// Stolen from Asst2 Video
 static void uio_init (
         struct iovec *iov, 
         struct uio *uio, 

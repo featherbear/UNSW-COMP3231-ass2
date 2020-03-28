@@ -135,7 +135,7 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     } 
 
     lock_release(file->lock);
-    return 0;     
+    return buflen;     
 }
 
 
@@ -152,36 +152,23 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         return -1; 
     }
 
-    // FIXME: TEST
-    // Copy data from User-land into Kernel-land 
-    /*
-    char *kernel_buf = kmalloc(sizeof(buflen));
-    if ((*errno = copyin(buf, kernel_buf, sizeof(kernel_buf)) != 0) return -1; 
-    */
-
     // Prepare the uio 
     struct iovec new_iov; 
     struct uio new_uio; 
 
-
-    // FIXME: TEST :: uio_init(&new_iov, &new_uio, kernel_buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
-    kprint("%s\n" )
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_WRITE);
 
     lock_acquire(file->lock);
     if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) {  
-        
 
         // Covers the case where no free space is left on the file (ENOSPC) 
         lock_release(file->lock);
-        // FIXME: TEST :: kfree(kernel_buf);
         return -1;     
-    }
-    // FIXME: TEST :: file->offset += sizeof(kernel_buf); 
+    } 
+
     file->offset += buflen;
     lock_release(file->lock);
-    //FIXME: TEST :: kfree(kernel_buf);
-    return 0;
+    return buflen;
 }
 
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {

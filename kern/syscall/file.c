@@ -137,15 +137,14 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     
     // Get the length of the file 
     struct stat stat; 
-    VOP_STAT(open_file->vnode, &stat);
+    VOP_STAT(file->vnode, &stat);
     int file_length = stat.st_size;
-     read_bytes; 
 
     // If reading past the end of the file, stop at the end (and set the offset)
-    if (file->offset + buflen >= file_length - 1) { 
-       int read_bytes = file_length - file->offset;
-        KASSERT(read_bytes )
-        file->offset = file_length - 1;
+    if (file->offset + buflen > file_length) { 
+        int read_bytes = file_length - file->offset;
+        KASSERT(read_bytes >= 0);
+        file->offset = file_length;
         return read_bytes;
     } 
 
@@ -235,6 +234,8 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
         *errno = EINVAL;
         return -1;
     }
+
+    open_file->offset = newPos;
 
     // Success
     return newPos;    

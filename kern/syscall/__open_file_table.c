@@ -1,8 +1,8 @@
 #include <__open_file_table.h>
 
 #include <kern/errno.h>
-#include <lib.h>
 #include <types.h>
+#include <lib.h>
 
 static struct open_file *__allocate_open_file(void);
 static struct open_file_node *__create_open_file_node(void);

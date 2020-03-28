@@ -6,6 +6,7 @@
 #include <kern/seek.h>
 #include <kern/stat.h>
 #include <kern/unistd.h>
+#include <types.h>
 #include <copyinout.h>
 #include <current.h>
 #include <file.h>
@@ -15,10 +16,10 @@
 #include <synch.h>
 #include <syscall.h>
 #include <thread.h>
-#include <types.h>
 #include <uio.h>
 #include <vfs.h>
 #include <vnode.h>
+
 
 #define MATCH_BITMASK(value, mask) ((value & mask) == mask)
 

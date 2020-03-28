@@ -4,10 +4,10 @@
 
 #include <kern/errno.h>
 #include <current.h>
+#include <types.h>
 #include <lib.h>
 #include <proc.h>
 #include <spinlock.h>
-#include <types.h>
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))

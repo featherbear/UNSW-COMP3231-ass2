@@ -1,5 +1,6 @@
 #include <types.h>
 #include <kern/errno.h>
+#include <kern/fcntl.h>
 #include <kern/unistd.h>
 #include <limits.h>
 #include <spinlock.h>
@@ -24,22 +25,16 @@ struct file_descriptor_table *create_file_table() {
 
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
 
-    fdtable->map = (struct open_file **) kmalloc(OPEN_MAX * sizeof(struct open_file *));
-
-    if (fdtable == NULL) {
-        KASSERT(0);
-        return NULL; // Let proc.c deal with this
+    KASSERT(fdtable != NULL);
         // return ENOMEM;
-    }
 
+    fdtable->map = (struct open_file **) kmalloc(OPEN_MAX * sizeof(struct open_file *));
     memset(fdtable->map, 0, OPEN_MAX * sizeof(struct open_file *));
 
 
     spinlock_init(&fdtable->lock);
 
-    create_open_file();
-/*
-    // FD_LOCK_ACQUIRE();
+    // FIXME: Not assigned during creation:: FD_LOCK_ACQUIRE();
     struct open_file *stdin_file = create_open_file();
 
 
@@ -61,7 +56,7 @@ struct file_descriptor_table *create_file_table() {
     assign_fd(STDOUT_FILENO, stdout_file);
     assign_fd(STDERR_FILENO, stderr_file);
     fdtable->next_fd = 3;
-*/
+
     return fdtable;
 }
 

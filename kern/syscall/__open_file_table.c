@@ -89,9 +89,8 @@ int create_open_file_table() {
     
     open_file_table = kmalloc(sizeof(struct open_file_table));
     
-    if (open_file_table == NULL) {
-        return ENOMEM;
-    }
+    KASSERT(open_file_table != NULL);
+        // return ENOMEM;
 
     memset(open_file_table, 0, sizeof(struct open_file_table));
 

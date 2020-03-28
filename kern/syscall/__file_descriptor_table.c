@@ -8,6 +8,7 @@
 #include <kern/stat.h>
 #include <kern/seek.h>
 #include <kern/unistd.h>
+// #include <kern/stdbool.h> //Apparently "No such file or directory?" #include<stdbool.h> doesn't work either
 #include <lib.h>
 #include <uio.h>
 #include <thread.h>
@@ -19,7 +20,6 @@
 #include <syscall.h>
 #include <copyinout.h>
 #include <proc.h>
-#include <stdbool.h>
 
 // TODO: Meta
 struct file_descriptor_table *create_file_table() {
@@ -45,7 +45,7 @@ struct file_descriptor_table *create_file_table() {
         // return ENOMEM;
     }
 
-    spinlock_init(&fdtable->lock);
+    spinlock_init(*(&fdtable->lock));
 
     create_open_file();
 /*
@@ -76,7 +76,7 @@ struct file_descriptor_table *create_file_table() {
 }
 
 void destroy_file_table(struct file_descriptor_table *fdtable) {
-    spinlock_cleanup(&fdtable->lock);
+    spinlock_cleanup(*(&fdtable->lock));
     kfree(fdtable->map);
     kfree(fdtable);
 }
@@ -132,7 +132,7 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
 
-    if (check_invalid_fd(fd) || (*open_file = fdtable->map[fd]) == NULL) {
+    if ((check_invalid_fd(fd)) || (*open_file = fdtable->map[fd]) == NULL) {
         return EBADF;
     }
 

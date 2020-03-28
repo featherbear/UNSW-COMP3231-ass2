@@ -58,7 +58,6 @@ struct open_file {
 };
 
 struct open_file_table;
-struct open_file_table *open_file_table = NULL; // Define our global value here
 
 /* Initialise the global open file table */
 int create_open_file_table(void);

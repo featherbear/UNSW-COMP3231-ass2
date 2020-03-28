@@ -17,6 +17,8 @@
 #include <copyinout.h>
 #include <proc.h>
 
+static struct open_file_table *open_file_table = NULL; // Define our global value here
+
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
 #define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
@@ -31,11 +33,11 @@ int create_open_file_table(void);
 static struct open_file *create_open_file(void);
 static struct open_file *__allocate_open_file(void);
 static struct open_file_node *__create_open_file_node(void);
-static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw rw); 
+static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw);  // FIXME: Not sure if `enum rw` or `uio_rw rw`
 static void assign_fd(fd_t fd, struct open_file *open_file);
 static bool check_invalid_fd(fd_t fd);
 
-struct open_file_table {
+struct of_table {
     struct spinlock lock;
     struct open_file_node *head;
     struct open_file_node *tail;
@@ -147,7 +149,7 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     } 
 
     // Prepare the uio 
-    struct iovec new_iov;
+    struct iovec new_iov; // FIXME: Storage size of 'new_iov' isn't known..
     struct uio new_uio; 
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_READ);
     
@@ -192,7 +194,9 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_WRITE);
 
     lock_acquire(file->lock);
-    if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) { 
+    // FIXME: ../../syscall/file.c:192:5: error: type of formal parameter 6 is incomplete"
+    if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) {  
+        
 
         // Covers the case where no free space is left on the file (ENOSPC) 
         lock_release(file->lock);
@@ -412,13 +416,12 @@ static struct open_file *create_open_file() {
     return open_file;
 }
 
-
 int create_open_file_table() {
     if (open_file_table != NULL) {
         return ENOSYS;
     } 
     
-    open_file_table = kmalloc(sizeof(struct open_file_table));
+    open_file_table = kmalloc(sizeof(struct of_table));
     if (open_file_table == NULL) {
         return ENOMEM;
     }
@@ -479,5 +482,3 @@ static void uio_init (
             .uio_space = proc_getas() // TODO: FIXME:
     };
 }
-
-

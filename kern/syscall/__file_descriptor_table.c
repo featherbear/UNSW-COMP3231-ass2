@@ -25,7 +25,7 @@ struct file_descriptor_table *create_file_table() {
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
 
     fdtable->map = (struct open_file **) kmalloc(OPEN_MAX * sizeof(struct open_file *));
-    bzero(fdtable->map, OPEN_MAX * sizeof(struct open_file *));
+    memset(fdtable->map, 0, OPEN_MAX * sizeof(struct open_file *));
 
 
     if (fdtable == NULL) {

@@ -88,10 +88,10 @@ int create_open_file_table() {
     if (open_file_table != NULL) return ENOSYS; 
     
     open_file_table = kmalloc(sizeof(struct open_file_table));
-    bzero(open_file_table, sizeof(struct open_file_table));
     
     if (open_file_table == NULL) return ENOMEM;
 
+    memset(open_file_table, 0, sizeof(struct open_file_table));
 
     spinlock_init(&open_file_table->lock);
     open_file_table->head = NULL;

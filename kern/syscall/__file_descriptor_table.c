@@ -19,13 +19,6 @@
 #include <syscall.h>
 #include <copyinout.h>
 #include <proc.h>
-#include <proc.h>
-#include <proc.h>
-#include <proc.h>
-#include <proc.h>
-#include <proc.h>
-#include <proc.h>
-#include <proc.h>
 
 // TODO: Meta
 struct file_descriptor_table *create_file_table() {

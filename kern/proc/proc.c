@@ -48,7 +48,6 @@
 #include <current.h>
 #include <addrspace.h>
 #include <vnode.h>
-#include <file.h>
 
 /*
  * The process for the kernel; this holds all the kernel-only threads.

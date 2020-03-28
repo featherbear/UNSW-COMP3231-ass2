@@ -17,12 +17,13 @@
 #include <copyinout.h>
 #include <proc.h>
 
-static struct open_file_table *open_file_table = NULL; // Define our global value here
+
+static struct of_table *oft = NULL;
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
-#define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
-#define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
+#define OF_LOCK_ACQUIRE() (spinlock_acquire(&of_table->lock))
+#define OF_LOCK_RELEASE() (spinlock_release(&of_table->lock))
 
 
 #define MATCH_BITMASK(value, mask) ((value & mask) == mask)
@@ -37,7 +38,7 @@ static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t 
 static void assign_fd(fd_t fd, struct open_file *open_file);
 static bool check_invalid_fd(fd_t fd);
 
-struct of_table {
+struct open_file_table {
     struct spinlock lock;
     struct open_file_node *head;
     struct open_file_node *tail;
@@ -379,12 +380,12 @@ static struct open_file_node *__create_open_file_node() {
 
     OF_LOCK_ACQUIRE();
 
-    if (open_file_table->head == NULL) {
-        open_file_table->head = open_file_table->tail = open_file_node;
+    if (of_table->head == NULL) {
+        of_table->head = of_table->tail = open_file_node;
     } else {
-        open_file_node->prev = open_file_table->tail;
-        if (open_file_table->tail != NULL) open_file_table->tail->next = open_file_node;
-        open_file_table->tail = open_file_node;
+        open_file_node->prev = of_table->tail;
+        if (of_table->tail != NULL) of_table->tail->next = open_file_node;
+        of_table->tail = open_file_node;
     }
 
     OF_LOCK_RELEASE();
@@ -417,27 +418,27 @@ static struct open_file *create_open_file() {
 }
 
 int create_open_file_table() {
-    if (open_file_table != NULL) {
+    if (of_table != NULL) {
         return ENOSYS;
     } 
     
-    open_file_table = kmalloc(sizeof(struct of_table));
-    if (open_file_table == NULL) {
+    of_table = kmalloc(sizeof(struct open_file_table));
+    if (of_table == NULL) {
         return ENOMEM;
     }
 
-    spinlock_init(&open_file_table->lock);
-    open_file_table->head = NULL;
-    open_file_table->tail = NULL;
+    spinlock_init(&of_table->lock);
+    of_table->head = NULL;
+    of_table->tail = NULL;
 
     return 0;
 }
 
 void destroy_open_file_table() {
     // TODO: Should we free the nodes? 
-    KASSERT(open_file_table->head == NULL && open_file_table->tail == NULL);
-    spinlock_cleanup(&open_file_table->lock);
-    kfree(open_file_table);
+    KASSERT(of_table->head == NULL && of_table->tail == NULL);
+    spinlock_cleanup(&of_table->lock);
+    kfree(of_table);
 }
 
 /* #endregion */

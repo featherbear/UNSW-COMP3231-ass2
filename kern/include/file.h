@@ -57,8 +57,6 @@ struct open_file {
     void *reference;     // Reference to the open_file_node ADT
 };
 
-struct open_file_table;
-
 /* Initialise the global open file table */
 int create_open_file_table(void);
 

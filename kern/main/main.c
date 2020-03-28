@@ -109,16 +109,14 @@ boot(void)
 	kprintf("\n");
 
 	/* Early initialization. */
+	create_open_file_table();
+
 	ram_bootstrap();
 	proc_bootstrap();
 	thread_bootstrap();
 	hardclock_bootstrap();
 	vfs_bootstrap();
 	kheap_nextgeneration();
-
-	//
-	create_open_file_table();
-	//
 
 	/* Probe and initialize devices. Interrupts should come on. */
 	kprintf("Device probe...\n");

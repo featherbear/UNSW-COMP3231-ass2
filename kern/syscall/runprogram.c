@@ -44,6 +44,7 @@
 #include <vfs.h>
 #include <syscall.h>
 #include <test.h>
+#include <__file_descriptor_table.h>
 
 /*
  * Load program "progname" and start running it in usermode.
@@ -89,6 +90,8 @@ runprogram(char *progname)
 
 	/* Done with the file now. */
 	vfs_close(v);
+
+	curproc->p_fdtable = create_file_table();
 
 	/* Define the user stack in the address space */
 	result = as_define_stack(as, &stackptr);

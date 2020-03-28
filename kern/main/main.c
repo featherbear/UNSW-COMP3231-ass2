@@ -110,7 +110,6 @@ boot(void)
 
 	/* Early initialization. */
 	ram_bootstrap();
-	create_open_file_table();
 	proc_bootstrap();
 	thread_bootstrap();
 	hardclock_bootstrap();
@@ -135,7 +134,10 @@ boot(void)
 	/* Default bootfs - but ignore failure, in case emu0 doesn't exist */
 	vfs_setbootfs("emu0");
 
+	create_open_file_table();
+
 	kheap_nextgeneration();
+
 
 	/*
 	 * Make sure various things aren't screwed up.

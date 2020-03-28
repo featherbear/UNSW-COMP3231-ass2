@@ -105,7 +105,7 @@ void assign_fd(fd_t fd, struct open_file *open_file) {
     // TODO: Check if it used?
     fdtable->map[fd] = open_file;
     
-    FD_LOCK_ACQUIRE();
+    FD_LOCK_RELEASE();
 }
 
 

@@ -165,11 +165,10 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
 
     // FIXME: TEST :: uio_init(&new_iov, &new_uio, kernel_buf, sizeof(kernel_buf), file->offset, UIO_WRITE);
-
+    kprint("%s\n" )
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_WRITE);
 
     lock_acquire(file->lock);
-    // FIXME: ../../syscall/file.c:192:5: error: type of formal parameter 6 is incomplete"
     if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) {  
         
 

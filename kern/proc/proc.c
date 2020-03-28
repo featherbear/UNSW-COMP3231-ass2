@@ -172,7 +172,7 @@ proc_destroy(struct proc *proc)
 
 	kfree(proc->p_name);
 	
-	// TODO: destroy_file_table(proc->p_fdtable);
+	TODO: destroy_file_table(proc->p_fdtable);
 	
 	kfree(proc);
 }

@@ -17,6 +17,8 @@
 #include <copyinout.h>
 #include <proc.h>
 
+#include <file_descriptor_table.h> 
+#include <open_file_table.h> 
 
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
@@ -27,24 +29,13 @@
 
 #define MATCH_BITMASK(value, mask) ((value & mask) == mask)
 
-static struct open_file *create_open_file(void);
-static struct open_file *__allocate_open_file(void);
-static struct open_file_node *__create_open_file_node(void);
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw);  // FIXME: Not sure if `enum rw` or `uio_rw rw`
+
+// Keep these in this file (y)
 static void assign_fd(fd_t fd, struct open_file *open_file);
 static bool check_invalid_fd(fd_t fd);
 
-struct open_file_table {
-    struct spinlock lock;
-    struct open_file_node *head;
-    struct open_file_node *tail;
-};
 
-struct open_file_node {
-    struct open_file_node *prev;
-    struct open_file_node *next;
-    struct open_file *entry;
-};
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
@@ -254,201 +245,12 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
     return newPos;    
 }
 
-/* #region FD Layer */
-
-// TODO: Meta
-static bool check_invalid_fd(fd_t fd) {
-    return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
-}
-
-// TODO: Meta
-struct file_descriptor_table *create_file_table() {
 
 
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-
-    struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
-
-    fdtable->map = (struct open_file **) kmalloc(OPEN_MAX * sizeof(struct open_file *));
-    bzero(fdtable->map, OPEN_MAX * sizeof(struct open_file *));
 
 
-    if (fdtable == NULL) {
-        return NULL; // Let proc.c deal with this
-        // return ENOMEM;
-    }
-
-    spinlock_init(&fdtable->lock);
-
-    create_open_file();
-/*
-    // FD_LOCK_ACQUIRE();
-    struct open_file *stdin_file = create_open_file();
 
 
-    char stdinPath[] = "con:";
-    if (vfs_open(stdinPath, O_RDONLY, 0, &stdin_file->vnode) != 0) return NULL;  
-
-    struct open_file *stdout_file = create_open_file();
-    char stdoutPath[] = "con:";
-    if (vfs_open(stdoutPath, O_WRONLY, 0, &stdout_file->vnode) != 0) return NULL;  
-
-
-    struct open_file *stderr_file = create_open_file();
-    char stderrPath[] = "con:";
-    if (vfs_open(stderrPath, O_WRONLY, 0, &stderr_file->vnode) != 0) return NULL;  
-
-    // FD_LOCK_RELEASE();
-    
-    assign_fd(STDIN_FILENO, stdin_file);
-    assign_fd(STDOUT_FILENO, stdout_file);
-    assign_fd(STDERR_FILENO, stderr_file);
-    fdtable->next_fd = 3;
-*/
-    return fdtable;
-}
-
-void destroy_file_table(struct file_descriptor_table *fdtable) {
-    spinlock_cleanup(&fdtable->lock);
-    kfree(fdtable->map);
-    kfree(fdtable);
-}
-
-static void assign_fd(fd_t fd, struct open_file *open_file) {
-    struct file_descriptor_table *fdtable = curproc->p_fdtable;
-     
-    FD_LOCK_ACQUIRE();
-
-    // TODO: Check if it used?
-    fdtable->map[fd] = open_file;
-    
-    FD_LOCK_ACQUIRE();
-}
-
-int get_free_fd(int *errno) {
-    struct file_descriptor_table *fdtable = curproc->p_fdtable;
-
-    struct open_file **map = fdtable->map;    
-
-    FD_LOCK_ACQUIRE();
-    fd_t free_fd = fdtable->next_fd;
-
-    if (free_fd == -1) {
-        *errno = EMFILE;
-        FD_LOCK_RELEASE();
-        return -1;
-    }
-
-    // Check for the next free file pointer
-    fd_t next_fd = free_fd;
-    do next_fd = (next_fd + 1) % OPEN_MAX;
-    while (map[next_fd] != NULL && next_fd != free_fd) ; // FIXME: +1? TESTME
-    
-    fdtable->next_fd = (next_fd == free_fd) ? -1 : next_fd;
-    *errno = free_fd;
-
-    FD_LOCK_RELEASE();
-
-    return 0;
-}
-
-
-/* #endregion */
-
-/* #region OF Layer */
-
-struct open_file_table *open_file_table = NULL;
-
-
-static struct open_file_node *__create_open_file_node() {
-    struct open_file_node *open_file_node = kmalloc(sizeof(*open_file_node));
-    if (open_file_node == NULL) {
-        // ENFILE
-        KASSERT(0);
-    }
-
-    return NULL;
-
-    open_file_node->prev = NULL;
-    open_file_node->next = NULL;
-    open_file_node->entry = NULL;
-
-    OF_LOCK_ACQUIRE();
-
-    if (open_file_table->head == NULL) {
-        open_file_table->head = open_file_table->tail = open_file_node;
-    } else {
-        open_file_node->prev = open_file_table->tail;
-        if (open_file_table->tail != NULL) open_file_table->tail->next = open_file_node;
-        open_file_table->tail = open_file_node;
-    }
-
-    OF_LOCK_RELEASE();
-
-    return open_file_node;
-}
-
-static struct open_file *__allocate_open_file() {
-    struct open_file *open_file = kmalloc(sizeof(*open_file));
-    if (open_file == NULL) {
-        KASSERT(0);
-        // ENFILE
-    }
-
-    open_file->flags = 0;
-    open_file->vnode = NULL;
-    open_file->lock = lock_create("File lock");
-
-    return open_file;
-}
- 
-static struct open_file *create_open_file() {
-    struct open_file_node *open_file_node = __create_open_file_node();
-
-    if (open_file_node == NULL) {}
-    return NULL;
-
-    struct open_file *open_file = __allocate_open_file();
-    // nice debigging :)  :) :) :) :) :) 
-    open_file_node->entry = open_file;
-    open_file->reference = open_file_node;
-
-    return open_file;
-}
-
-int create_open_file_table() {
-
-    // Only one global open_file_table shoud exist
-    if (open_file_table != NULL) return ENOSYS; 
-    
-    open_file_table = kmalloc(sizeof(struct open_file_table));
-    bzero(open_file_table, sizeof(struct open_file_table));
-
-    if (open_file_table == NULL) return ENOMEM;
-
-
-    spinlock_init(&open_file_table->lock);
-    open_file_table->head = NULL;
-    open_file_table->tail = NULL;
-
-    return 0;
-}
-
-void destroy_open_file_table() {
-    // TODO: Should we free the nodes? Probably? We had to do that in our labs didn't we.
-    KASSERT(open_file_table->head == NULL && open_file_table->tail == NULL);
-    spinlock_cleanup(&open_file_table->lock);
-    kfree(open_file_table);
-}
-
-/* #endregion */
 
 /* #region File Helpers */
 

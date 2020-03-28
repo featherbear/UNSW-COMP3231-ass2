@@ -6,6 +6,9 @@
         "open_file_table.h": "c",
         "__file_descriptor_table.h": "c",
         "unistd.h": "c",
-        "__open_file_table.h": "c"
+        "__open_file_table.h": "c",
+        "types.h": "c",
+        "copyinout.h": "c",
+        "syscall.h": "c"
     }
 }

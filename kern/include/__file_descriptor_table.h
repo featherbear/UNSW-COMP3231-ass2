@@ -1,12 +1,13 @@
 #ifndef ___FILE_DESCRIPTOR_TABLE_H_
 #define ___FILE_DESCRIPTOR_TABLE_H_
 
-#include <types.h>
+
 #include <kern/errno.h>
-#include <lib.h>
-#include <spinlock.h>
 #include <current.h>
+#include <lib.h>
 #include <proc.h>
+#include <spinlock.h>
+#include <types.h>
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
@@ -39,6 +40,11 @@ bool check_invalid_fd(fd_t fd);
 
 void assign_fd(fd_t fd, struct open_file *open_file);
 
+/* Get the open file entry associated with the fd for the current process 
+
+   On Success: Sets `open_file` to the open_file structure, and returns 0
+   On Failure: Returns a non-zero value corresponding to the error code
+*/
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file); 
 
 

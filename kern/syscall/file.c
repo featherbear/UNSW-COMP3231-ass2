@@ -1,24 +1,24 @@
-#include <types.h>
-#include <kern/errno.h>
-#include <kern/fcntl.h>
-#include <kern/limits.h>
-#include <kern/stat.h>
-#include <kern/seek.h>
-#include <kern/unistd.h>
-#include <lib.h>
-#include <uio.h>
-#include <thread.h>
-#include <current.h>
-#include <synch.h>
-#include <vfs.h>
-#include <vnode.h>
-#include <file.h>
-#include <syscall.h>
-#include <copyinout.h>
-#include <proc.h>
-
 #include <__file_descriptor_table.h> 
 #include <__open_file_table.h> 
+
+#include <kern/errno.h>
+#include <kern/fcntl.h>
+#include <kern/seek.h>
+#include <kern/stat.h>
+#include <kern/unistd.h>
+#include <copyinout.h>
+#include <current.h>
+#include <file.h>
+#include <lib.h>
+#include <limits.h>
+#include <proc.h>
+#include <synch.h>
+#include <syscall.h>
+#include <thread.h>
+#include <types.h>
+#include <uio.h>
+#include <vfs.h>
+#include <vnode.h>
 
 #define MATCH_BITMASK(value, mask) ((value & mask) == mask)
 
@@ -106,7 +106,6 @@ fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
     }
 
     assign_fd(newfd, fdtable->map[oldfd]);
-    
     return newfd;
 }
 

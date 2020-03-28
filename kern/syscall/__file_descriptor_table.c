@@ -1,6 +1,8 @@
 #include <kern/errno.h>
 #include <kern/limits.h>
+#include <kern/unistd.h>
 #include <limits.h>
+
 
 #include <__file_descriptor_table.h>
 #include <__open_file_table.h>
@@ -30,7 +32,7 @@ struct file_descriptor_table *create_file_table() {
         // return ENOMEM;
     }
 
-    spinlock_init(*(&fdtable->lock));
+    spinlock_init(&fdtable->lock);
 
     create_open_file();
 /*
@@ -61,7 +63,7 @@ struct file_descriptor_table *create_file_table() {
 }
 
 void destroy_file_table(struct file_descriptor_table *fdtable) {
-    spinlock_cleanup(*(&fdtable->lock));
+    spinlock_cleanup(&fdtable->lock);
     kfree(fdtable->map);
     kfree(fdtable);
 }

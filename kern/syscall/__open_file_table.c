@@ -1,7 +1,11 @@
+#include <types.h>
 #include <kern/errno.h>
+#include <kern/limits.h>
+#include <kern/stat.h>
+#include <lib.h>
+
 #include <__open_file_table.h>
 
-static struct open_file *create_open_file(void);
 static struct open_file *__allocate_open_file(void);
 static struct open_file_node *__create_open_file_node(void);
  
@@ -35,8 +39,8 @@ static struct open_file_node *__create_open_file_node() {
     open_file_node->entry = NULL;
 
 
-
     OF_LOCK_ACQUIRE();
+
     OF_LOCK_RELEASE();
     return NULL;
 

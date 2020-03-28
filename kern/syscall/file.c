@@ -181,6 +181,8 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         return -1;     
     } 
 
+    // TODO: Fixed file size!?!??!?!
+
     file->offset += buflen;
     lock_release(file->lock);
     return buflen;

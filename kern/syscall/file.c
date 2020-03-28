@@ -94,7 +94,7 @@ int sys_close(fd_t fd, int *errno) {
 }
 
 fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
-    if (check_invalid_fd(oldfd) | check_invalid_fd(newfd)) {
+    if (check_invalid_fd(oldfd) || check_invalid_fd(newfd)) {
         *errno = EBADF;
         return -1;
     }

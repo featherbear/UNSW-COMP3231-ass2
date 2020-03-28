@@ -8,7 +8,7 @@
 #include <kern/stat.h>
 #include <kern/seek.h>
 #include <kern/unistd.h>
-// #include <kern/stdbool.h> //Apparently "No such file or directory?" #include<stdbool.h> doesn't work either
+#include <stat.h>
 #include <lib.h>
 #include <uio.h>
 #include <thread.h>
@@ -20,6 +20,10 @@
 #include <syscall.h>
 #include <copyinout.h>
 #include <proc.h>
+#include <stat.h>
+#include <uio.h>
+#include <current.h>
+
 
 // TODO: Meta
 struct file_descriptor_table *create_file_table() {

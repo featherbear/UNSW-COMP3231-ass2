@@ -1,8 +1,8 @@
 #ifndef ___FILE_DESCRIPTOR_TABLE_H_
 #define ___FILE_DESCRIPTOR_TABLE_H_
 
-#define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
-#define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
+#define FD_LOCK_ACQUIRE() (spinlock_acquire(*(&curproc->p_fdtable->lock)))
+#define FD_LOCK_RELEASE() (spinlock_release(*(&curproc->p_fdtable->lock)))
 
 typedef int fd_t;
 
@@ -11,7 +11,7 @@ struct file_descriptor_table
 {
     fd_t next_fd;              // Next free file descriptor number 
     struct open_file **map;    // Array of pointers to the OFT
-    struct spinlock lock;      // Thread-safe lock
+    struct spinlock *lock;      // Thread-safe lock
 
     // TODO: Released files should get the same fd if they are requested again
 };

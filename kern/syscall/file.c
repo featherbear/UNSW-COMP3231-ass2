@@ -18,7 +18,6 @@
 #include <proc.h>
 
 
-struct of_table *open_file_table = NULL;
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
@@ -35,7 +34,7 @@ static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t 
 static void assign_fd(fd_t fd, struct open_file *open_file);
 static bool check_invalid_fd(fd_t fd);
 
-struct of_table {
+struct open_file_table {
     struct spinlock lock;
     struct open_file_node *head;
     struct open_file_node *tail;
@@ -358,10 +357,12 @@ int get_free_fd(int *errno) {
     return 0;
 }
 
+
 /* #endregion */
 
 /* #region OF Layer */
 
+struct open_file_table *open_file_table = NULL;
 
 
 static struct open_file_node *__create_open_file_node() {
@@ -419,7 +420,7 @@ int create_open_file_table() {
         return ENOSYS;
     } 
     
-    open_file_table = kmalloc(sizeof(struct of_table));
+    open_file_table = kmalloc(sizeof(struct open_file_table));
     if (open_file_table == NULL) {
         return ENOMEM;
     }

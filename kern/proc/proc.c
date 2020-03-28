@@ -82,7 +82,7 @@ proc_create(const char *name)
 	/* VFS fields */
 	proc->p_cwd = NULL;
 
-	proc->p_fdtable = create_file_table();
+	// TODO: proc->p_fdtable = create_file_table();
 
 	return proc;
 }
@@ -172,7 +172,7 @@ proc_destroy(struct proc *proc)
 
 	kfree(proc->p_name);
 	
-	destroy_file_table(proc->p_fdtable);
+	// TODO: destroy_file_table(proc->p_fdtable);
 	
 	kfree(proc);
 }

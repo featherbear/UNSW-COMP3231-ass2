@@ -85,7 +85,7 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno);
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno);
 fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno);
 
-extern struct of_table *open_file_table;
+extern struct open_file_table *open_file_table;
 
 /* #endregion */
 

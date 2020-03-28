@@ -17,24 +17,13 @@
 #include <copyinout.h>
 #include <proc.h>
 
-#include <file_descriptor_table.h> 
-#include <open_file_table.h> 
-
-
-#define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
-#define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
-#define OF_LOCK_ACQUIRE() (spinlock_acquire(&open_file_table->lock))
-#define OF_LOCK_RELEASE() (spinlock_release(&open_file_table->lock))
-
+#include <__file_descriptor_table.h> 
+#include <__open_file_table.h> 
 
 #define MATCH_BITMASK(value, mask) ((value & mask) == mask)
 
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw);  // FIXME: Not sure if `enum rw` or `uio_rw rw`
-
-// Keep these in this file (y)
 static void assign_fd(fd_t fd, struct open_file *open_file);
-static bool check_invalid_fd(fd_t fd);
-
 
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
@@ -254,7 +243,7 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
 
 /* #region File Helpers */
 
-/* Retrieves `open_file` from given fd#. If invalid, return EBADF */
+/* Retrieves `open_file` from given file descriptor. If invalid, return EBADF */
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
     struct file_descriptor_table *fdtable = curproc->p_fdtable;

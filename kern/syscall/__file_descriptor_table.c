@@ -1,13 +1,5 @@
-static bool check_invalid_fd(fd_t fd);
-struct file_descriptor_table *create_file_table();
-void destroy_file_table(struct file_descriptor_table *fdtable);
-static void assign_fd(fd_t fd, struct open_file *open_file);
-int get_free_fd(int *errno); 
+#include <__file_descriptor_table.h>
 
-// TODO: Meta
-static bool check_invalid_fd(fd_t fd) {
-    return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
-}
 
 // TODO: Meta
 struct file_descriptor_table *create_file_table() {
@@ -69,16 +61,6 @@ void destroy_file_table(struct file_descriptor_table *fdtable) {
     kfree(fdtable);
 }
 
-static void assign_fd(fd_t fd, struct open_file *open_file) {
-    struct file_descriptor_table *fdtable = curproc->p_fdtable;
-     
-    FD_LOCK_ACQUIRE();
-
-    // TODO: Check if it used?
-    fdtable->map[fd] = open_file;
-    
-    FD_LOCK_ACQUIRE();
-}
 
 int get_free_fd(int *errno) {
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
@@ -107,3 +89,7 @@ int get_free_fd(int *errno) {
     return 0;
 }
 
+// TODO: Meta
+bool check_invalid_fd(fd_t fd) {
+    return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
+}

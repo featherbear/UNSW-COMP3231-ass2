@@ -2,6 +2,8 @@
     "files.associations": {
         "limits.h": "c",
         "errno.h": "c",
-        "lib.h": "c"
+        "lib.h": "c",
+        "open_file_table.h": "c",
+        "__file_descriptor_table.h": "c"
     }
 }

@@ -5,7 +5,6 @@
 #include <kern/errno.h>
 #include <current.h>
 #include <types.h>
-#include <lib.h>
 #include <proc.h>
 #include <spinlock.h>
 

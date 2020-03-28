@@ -5,8 +5,8 @@
 #ifndef _FILE_H_
 #define _FILE_H_
 
-#include <__open_file_table.h>
 #include <__file_descriptor_table.h>
+#include <__open_file_table.h>
 
 #include <types.h>
 

@@ -277,10 +277,8 @@ struct file_descriptor_table *create_file_table() {
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
 
     fdtable->map = (struct open_file **) kmalloc(OPEN_MAX * sizeof(struct open_file *));
+    bzero(fdtable->map, OPEN_MAX * sizeof(struct open_file *));
 
-    // kmemset?
-    for (int i = 0; i < OPEN_MAX; i++) fdtable->map[i] = NULL;
-    
 
     if (fdtable == NULL) {
         return NULL; // Let proc.c deal with this
@@ -421,6 +419,8 @@ int create_open_file_table() {
     } 
     
     open_file_table = kmalloc(sizeof(struct open_file_table));
+    bzero(open_file_table, sizeof(struct open_file_table));
+    
     if (open_file_table == NULL) {
         return ENOMEM;
     }

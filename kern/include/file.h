@@ -26,10 +26,6 @@ struct file_descriptor_table
     struct spinlock lock;      // Thread-safe lock
 
     // TODO: Released files should get the same fd if they are requested again
-    /* 
-        Keep a dictionary of recently closed files 
-        "File Path" : File Descriptor Number 
-    */ 
 };
 
 /* Calculate the next free fd */

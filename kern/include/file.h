@@ -5,12 +5,9 @@
 #ifndef _FILE_H_
 #define _FILE_H_
 
-/*
- * Contains some file-related maximum length constants
- */
 #include <limits.h>
 #include <types.h>
-#include <synch.h> // for P(), V(), sem_* 
+#include <synch.h> 
 #include <spinlock.h>
 
 #include <__file_descriptor_table.h>

@@ -24,11 +24,11 @@ struct file_descriptor_table *create_file_table() {
     //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
 
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
-
-    KASSERT(fdtable != NULL);
-        // return ENOMEM;
+    KASSERT(fdtable != NULL);         // return ENOMEM;
+    memset(fdtable, 0, sizeof(struct file_descriptor_table));
 
     fdtable->map = (struct open_file **) kmalloc(OPEN_MAX * sizeof(struct open_file *));
+    KASSERT(fdtable->map != NULL);
     memset(fdtable->map, 0, OPEN_MAX * sizeof(struct open_file *));
 
 

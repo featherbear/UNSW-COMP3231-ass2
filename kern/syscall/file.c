@@ -32,7 +32,7 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
  
     char *k_filename = kmalloc(PATH_MAX);
-    if ((*errno = copyinstr(filename, k_filename, sizeof(*k_filename), NULL)) != 0) return -1; 
+    if ((*errno = copyinstr(filename, k_filename, PATH_MAX, NULL)) != 0) return -1; 
  
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();

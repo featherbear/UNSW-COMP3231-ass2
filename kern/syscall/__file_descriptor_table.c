@@ -37,15 +37,17 @@ struct file_descriptor_table *create_file_table() {
     struct open_file *stdin_file = create_open_file();
     char stdinPath[] = "con:";
     if (vfs_open(stdinPath, O_RDONLY, 0, &stdin_file->vnode) != 0) return NULL;  
+    stdin_file->flags = O_RDONLY;
 
     struct open_file *stdout_file = create_open_file();
     char stdoutPath[] = "con:";
     if (vfs_open(stdoutPath, O_WRONLY, 0, &stdout_file->vnode) != 0) return NULL;  
-
+    stdout_file->flags = O_WRONLY;
 
     struct open_file *stderr_file = create_open_file();
     char stderrPath[] = "con:";
     if (vfs_open(stderrPath, O_WRONLY, 0, &stderr_file->vnode) != 0) return NULL;  
+    stderr_file->flags = O_WRONLY;
 
     fdtable->map[STDIN_FILENO] = stdin_file;
     fdtable->map[STDOUT_FILENO] = stdout_file;

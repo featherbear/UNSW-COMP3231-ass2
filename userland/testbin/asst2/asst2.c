@@ -16,6 +16,9 @@ main(int argc, char * argv[])
 {
 (void) argc;
 (void) argv;
+
+write(1, "hello", 5);
+
 //        printf("\n**********\n* File Tester\n");
 
 /*

@@ -59,8 +59,9 @@ static struct open_file *__allocate_open_file() {
     // ENFILE
 
     open_file->flags = 0;
+    open_file->offset = 0;
     open_file->vnode = NULL;
-    open_file->lock = lock_create("File lock");
+    open_file->lock = lock_create("file lock");
 
     return open_file;
 }

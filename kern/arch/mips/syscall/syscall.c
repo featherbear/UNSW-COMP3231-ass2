@@ -36,6 +36,8 @@
 #include <current.h>
 #include <syscall.h>
 
+static void call_sys_lseek(struct trapframe *tf, int32_t *retval, int *err);
+
 
 /*
  * System call dispatcher.
@@ -125,20 +127,13 @@ syscall(struct trapframe *tf)
 			break;
 
 		case SYS_lseek: 
-			off_t pos;
-			join32to64(tf->tf_a2, tf->tf_a3, &pos);
+			call_sys_lseek(struct trapframe *tf, int32_t *retval, int *err);
+
 			
-			int whence;
-			copyin((userptr_t) tf->tf_sp + 16, &whence, sizeof(int));
-
-			off_t newPosition = sys_lseek(tf->tf_a0, pos, whence, &err);
-
-									 // v0 assigned to retval below
-			split64to32(newPosition, &retval, &tf->tf_v1);
 			break; 
 
 		case SYS_dup2: 
-			retval = sys_dup2(tf->tf_a0, tf->tf_a2, &errno);
+			retval = sys_dup2(tf->tf_a0, tf->tf_a2, &e);
 			break; 
 
 		default:
@@ -176,6 +171,18 @@ syscall(struct trapframe *tf)
 	KASSERT(curthread->t_iplhigh_count == 0);
 }
 
+static void call_sys_lseek(struct trapframe *tf, int32_t *retval, int *err) {
+	off_t pos;
+	join32to64(tf->tf_a2, tf->tf_a3, &pos);
+	
+	int whence;
+	copyin((userptr_t) tf->tf_sp + 16, &whence, sizeof(int));
+
+	off_t newPosition = sys_lseek(tf->tf_a0, pos, whence, &err);
+
+								// v0 assigned to retval below
+	split64to32(newPosition, *retval, &tf->tf_v1);
+}
 /*
  * Enter user mode for a newly forked process.
  *

@@ -19,6 +19,8 @@ int create_open_file_table(void);
 /* Destroy the global open file table */
 void destroy_open_file_table(void);
 
+struct open_file *create_open_file(void);
+
 extern struct open_file_table *open_file_table;
 
 #endif /* ___OPEN_FILE_TABLE_H_ */

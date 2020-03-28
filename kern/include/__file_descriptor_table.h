@@ -4,6 +4,8 @@
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
 
+typedef int fd_t;
+
 /* PER-PROCESS map of a file descriptors to its `struct file_entry` */
 struct file_descriptor_table
 {
@@ -27,6 +29,10 @@ struct file_descriptor_table *create_file_table(void);
 void destroy_file_table(struct file_descriptor_table *fdtable);
 
 bool check_invalid_fd(fd_t fd);
+
+void assign_fd(fd_t fd, struct open_file *open_file);
+
+int get_open_file_from_fd(fd_t fd, struct open_file **open_file); 
 
 
 #endif /* ___FILE_DESCRIPTOR_TABLE_H_ */

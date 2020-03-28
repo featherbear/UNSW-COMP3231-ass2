@@ -16,7 +16,7 @@
 #include <__file_descriptor_table.h>
 #include <__open_file_table.h>
 
-typedef int fd_t;
+
 
 /* #region File Helpers */
 
@@ -25,7 +25,6 @@ typedef int fd_t;
    On Success: Sets `open_file` to the open_file structure, and returns 0
    On Failure: Returns a non-zero value corresponding to the error code
 */
-int get_open_file_from_fd(fd_t fd, struct open_file **open_file); 
 
 /* #endregion */
 

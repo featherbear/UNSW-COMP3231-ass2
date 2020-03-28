@@ -23,8 +23,6 @@
 #define MATCH_BITMASK(value, mask) ((value & mask) == mask)
 
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw);  // FIXME: Not sure if `enum rw` or `uio_rw rw`
-static void assign_fd(fd_t fd, struct open_file *open_file);
-
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
@@ -188,29 +186,35 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 }
 
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
-    switch (whence) {
-        case SEEK_SET:
-        case SEEK_CUR:
-        case SEEK_END:
-            break;
-        default:
-            *errno = EINVAL;
-            return -1;
-    }
 
+    // Get `open_file` 
     struct open_file *open_file;
     if ((*errno = get_open_file_from_fd(fd, &open_file)) != 0) return -1;
 
+    // Check if file seekable
     if (!VOP_ISSEEKABLE(open_file->vnode)) {
         *errno = ESPIPE;
         return -1;
     }
 
+    // Check if whence is valid 
+    switch (whence) { 
+        case SEEK_SET: 
+        case SEEK_CUR: 
+        case SEEK_END: 
+            break; 
+        default: 
+            *errno = EINVAL; 
+            return -1; 
+    }
+
+    // `Seek
     off_t curPos, newPos;
     curPos = newPos = open_file->offset;
 
     struct stat stat; // For SEEK_END
 
+    
     switch (whence) {
 
         case SEEK_SET:
@@ -233,29 +237,6 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
     // Success
     return newPos;    
 }
-
-
-
-
-
-
-
-
-/* #region File Helpers */
-
-/* Retrieves `open_file` from given file descriptor. If invalid, return EBADF */
-int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
-
-    struct file_descriptor_table *fdtable = curproc->p_fdtable;
-
-    if (check_invalid_fd(fd) || (*open_file = fdtable->map[fd]) == NULL) {
-        return EBADF;
-    }
-
-    return 0;
-}
-
-/* #endregion */
 
 static void uio_init (
         struct iovec *iov, 
@@ -281,3 +262,4 @@ static void uio_init (
             .uio_space = proc_getas() // TODO: FIXME:
     };
 }
+

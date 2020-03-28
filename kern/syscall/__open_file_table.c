@@ -66,7 +66,7 @@ static struct open_file *__allocate_open_file() {
     return open_file;
 }
  
-static struct open_file *create_open_file() {
+struct open_file *create_open_file() {
     struct open_file_node *open_file_node = __create_open_file_node();
 
     if (open_file_node == NULL) {}

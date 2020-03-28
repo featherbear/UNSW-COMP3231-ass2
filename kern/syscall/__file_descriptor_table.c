@@ -1,18 +1,19 @@
 #include <__file_descriptor_table.h>
+#include <__open_file_table.h>
 
 
 // TODO: Meta
 struct file_descriptor_table *create_file_table() {
 
 
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY MANGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY MANAGE THIS ENTIRE FUNCTION
+    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
+    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
+    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
+    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
+    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
+    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
+    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
 
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
 
@@ -92,4 +93,29 @@ int get_free_fd(int *errno) {
 // TODO: Meta
 bool check_invalid_fd(fd_t fd) {
     return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
+}
+
+
+void assign_fd(fd_t fd, struct open_file *open_file) {
+    struct file_descriptor_table *fdtable = curproc->p_fdtable;
+     
+    FD_LOCK_ACQUIRE();
+
+    // TODO: Check if it used?
+    fdtable->map[fd] = open_file;
+    
+    FD_LOCK_ACQUIRE();
+}
+
+
+/* Retrieves `open_file` from given file descriptor. If invalid, return EBADF */
+int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
+
+    struct file_descriptor_table *fdtable = curproc->p_fdtable;
+
+    if (check_invalid_fd(fd) || (*open_file = fdtable->map[fd]) == NULL) {
+        return EBADF;
+    }
+
+    return 0;
 }

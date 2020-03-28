@@ -36,8 +36,6 @@ struct file_descriptor_table *create_file_table() {
 
     // FIXME: Not assigned during creation:: FD_LOCK_ACQUIRE();
     struct open_file *stdin_file = create_open_file();
-
-
     char stdinPath[] = "con:";
     if (vfs_open(stdinPath, O_RDONLY, 0, &stdin_file->vnode) != 0) return NULL;  
 

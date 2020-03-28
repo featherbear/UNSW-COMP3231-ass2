@@ -109,9 +109,8 @@ boot(void)
 	kprintf("\n");
 
 	/* Early initialization. */
-	create_open_file_table();
-
 	ram_bootstrap();
+	create_open_file_table();
 	proc_bootstrap();
 	thread_bootstrap();
 	hardclock_bootstrap();

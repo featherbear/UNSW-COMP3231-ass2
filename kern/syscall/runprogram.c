@@ -91,14 +91,14 @@ runprogram(char *progname)
 	/* Done with the file now. */
 	vfs_close(v);
 
-	curproc->p_fdtable = create_file_table();
-
 	/* Define the user stack in the address space */
 	result = as_define_stack(as, &stackptr);
 	if (result) {
 		/* p_addrspace will go away when curproc is destroyed */
 		return result;
 	}
+
+	curproc->p_fdtable = create_file_table();
 
 	/* Warp to user mode. */
 	enter_new_process(0 /*argc*/, NULL /*userspace addr of argv*/,

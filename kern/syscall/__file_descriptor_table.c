@@ -34,7 +34,6 @@ struct file_descriptor_table *create_file_table() {
 
     spinlock_init(&fdtable->lock);
 
-    // FIXME: Not assigned during creation:: FD_LOCK_ACQUIRE();
     struct open_file *stdin_file = create_open_file();
     char stdinPath[] = "con:";
     if (vfs_open(stdinPath, O_RDONLY, 0, &stdin_file->vnode) != 0) return NULL;  
@@ -48,11 +47,9 @@ struct file_descriptor_table *create_file_table() {
     char stderrPath[] = "con:";
     if (vfs_open(stderrPath, O_WRONLY, 0, &stderr_file->vnode) != 0) return NULL;  
 
-    // FD_LOCK_RELEASE();
-    
-    assign_fd(STDIN_FILENO, stdin_file);
-    assign_fd(STDOUT_FILENO, stdout_file);
-    assign_fd(STDERR_FILENO, stderr_file);
+    fdtable->map[STDIN_FILENO] = stdin_file;
+    fdtable->map[STDOUT_FILENO] = stdout_file;
+    fdtable->map[STDERR_FILENO] = stderr_file;
     fdtable->next_fd = 3;
 
     return fdtable;

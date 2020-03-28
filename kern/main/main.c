@@ -31,6 +31,8 @@
  * Main.
  */
 
+#include <__open_file_table.h>
+
 #include <types.h>
 #include <kern/errno.h>
 #include <kern/reboot.h>
@@ -114,6 +116,10 @@ boot(void)
 	vfs_bootstrap();
 	kheap_nextgeneration();
 
+	//
+	create_open_file_table();
+	//
+
 	/* Probe and initialize devices. Interrupts should come on. */
 	kprintf("Device probe...\n");
 	KASSERT(curthread->t_curspl > 0);
@@ -155,6 +161,8 @@ shutdown(void)
 	vfs_clearcurdir();
 	vfs_unmountall();
 
+	destroy_open_file_table();
+	
 	thread_shutdown();
 
 	splhigh();

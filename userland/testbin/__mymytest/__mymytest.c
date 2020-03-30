@@ -13,7 +13,6 @@ int main(int argc, char * argv[]) {
         (void) argc;
         (void) argv;
         
-
         test_open();
 
         test_close();

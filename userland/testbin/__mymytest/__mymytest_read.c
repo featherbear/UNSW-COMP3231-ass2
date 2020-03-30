@@ -28,11 +28,13 @@ void test_read() {
 int fd; 
 char buf[MAX_BUF];
 
+// FIXME: Looks like `read` doesn't error with no permission
+// Only does EBADF, EFAULT and EIO
 static void test_read__no_permission() {
 
     fd = open(TEST_FILENAME, O_WRONLY | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
-    // _assert(errno == ) // FIND OUT WHAT VOP_READ returns for the rror vlue
+    _assert(errno == EBADF);
     close(fd); 
     return;
 }
@@ -63,7 +65,7 @@ static void test_read__emptyString() {
     close(fd); 
     return;
 }
-static void test_read__readBeyondFile() { // Means reading beyond the file size
+static void test_read__readBeyondFile() {
 
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     write(fd, TEST_STRING, TEST_STRING_SIZE);
@@ -72,22 +74,27 @@ static void test_read__readBeyondFile() { // Means reading beyond the file size
     return;
 }
 static void test_read__nonexistent_fd() {
-    
+    // FIXME: (Comment) - Put this here instead of invalid because 100 is valid but nonexistent
+    _assert(read(100, &buf[0], TEST_STRING_SIZE) == -1); 
+    _assert(errno == EBADF); 
+
+
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     close(fd); 
 
     // Now that fd doesn't exist anymore. 
-    _assert(read(fd, &buf[0], TEST_LENGTH_ZERO == -1); 
+    _assert(read(fd, &buf[0], TEST_LENGTH_ZERO) == -1); 
     _assert(errno == EBADF);
 
     return;
 }
 
 static void test_read__invalid_fd() {
-    _assert(read(100, &buf[0], TEST_STRING_SIZE) == -1); 
+
+    _assert(read(-1, &buf[0], TEST_STRING_SIZE) == -1); 
     _assert(errno == EBADF); 
 
-    _assert(read(128, &buf[0], TEST_STRING_SIZE) == -1); 
+    _assert(read(OPEN_MAX, &buf[0], TEST_STRING_SIZE) == -1); 
     _assert(errno == EBADF); 
     return;
 }

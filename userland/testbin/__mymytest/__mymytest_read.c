@@ -1,7 +1,9 @@
+#include <stdlib.h>
 #include "__mymytest.h"
 
 #define MAX_BUF 500 
-#define TEST_LENGTH__GT_MAX 501
+#define TEST_LENGTH_GT_MAX 501
+#define TEST_LENGTH_ZERO 0
 #define TEST_FILENAME "test.file"
 #define TEST_MODE 0700
 
@@ -22,8 +24,10 @@ void test_read() {
 }
 
 int fd; 
-char buf[MAX_BUF]
+char buf[MAX_BUF];
+
 static void test_read__no_permission() {
+
     fd = open(TEST_FILENAME, OWRONLY | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
     // _assert(errno == ) // FIND OUT WHAT VOP_READ returns for the rror vlue
@@ -31,16 +35,30 @@ static void test_read__no_permission() {
     return;
 }
 static void test_read__end_of_file() {
+
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
-    // _assert(errno == ) // FIND OUT WHAT VOP_READ returns for the rror vlue
+    _assert(errno == EPERM); 
     close(fd); 
     return;
 }
 static void test_read__emptyString() {
+
+    buf[0] = "A";
+
+    fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
+    _assert((read(fd, &buf[0], TEST_LENGTH_ZERO)) == 0); 
+
+    // Check that buf hasn't been altered
+    _assert(buf[0] == "A"); 
+    close(fd); 
     return;
 }
 static void test_read__readBeyondFile() {
+    fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
+    _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
+    _assert(errno == EPERM); 
+    close(fd); 
     return;
 }
 static void test_read__nonexistent_fd() {

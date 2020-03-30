@@ -21,14 +21,16 @@ void test_open() {
     test(test_open__filetable_full);
 }
 
+// Global Variable
+int fd;
+
 static void test_open__noFlagsProvided() { 
-    int fd; 
 
     // Only doing this because I don't know where to keep the file
     fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     close(fd); 
 
-    _asssert((fd = open(TEST_VALID_FILENAME, NULL, TEST_MODE)) == -1); 
+    _assert((fd = open(TEST_VALID_FILENAME, NULL, TEST_MODE)) == -1); 
     // _assert(errno == ) 
     // TODO: Not sure what it should be equal to .. VFS man page doesn't tell us the return error values 
     
@@ -36,17 +38,17 @@ static void test_open__noFlagsProvided() {
 }
 static void test_open__invalidFilename() {
 
-    _asssert((fd = open(TEST_INVALID_FILENAME, O_RDWR , TEST_MODE)) == -1); 
+    _assert((fd = open(TEST_INVALID_FILENAME, O_RDWR , TEST_MODE)) == -1); 
     _assert(errno == EFAULT); 
     return;
 }
 static void test_open__filetable_full() {
-
-    int fd;
-    char *file_name; 
+    char *src = TEST_VALID_FILENAME;  
+    char *dest = str(i); 
     for (int i = 3; i < 128; i++) { 
-        file_name = strcat(TEST_VALID_FILENAME, str(i)); // TODO: Test if this works
-        fd = open(filename, O_RDWR | O_CREAT, TEST_MODE); 
+        // char *strcat(char *dest, const char *src)
+        strcat(src, str(i)); // TODO: Test if this works
+        fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
 
         if (fd > 0) { 
             close(i); 

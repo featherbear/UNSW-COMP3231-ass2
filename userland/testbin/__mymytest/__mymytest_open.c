@@ -35,17 +35,21 @@ static void test_open__noFlagsProvided() {
     close(fd); 
 
     _assert((fd = open(TEST_VALID_FILENAME, INVALID_FLAG, TEST_MODE)) == -1); 
-    // _assert(errno == ) 
-    // TODO: Not sure what it should be equal to .. VFS man page doesn't tell us the return error values 
-    
+    _assert(errno == EINVAL); 
+
     return;
 }
 static void test_open__invalidFilename() {
+    // FIXME: What's considered invalid?
 
     _assert((fd = open(TEST_INVALID_FILENAME, O_RDWR , TEST_MODE)) == -1); 
     _assert(errno == EFAULT); 
     return;
 }
+
+// TODO:  Implement    ENOENT		The named file does not exist, and O_CREAT was not specified.
+
+
 static void test_open__filetable_full() {
 
     int fd_max_reached = false; 

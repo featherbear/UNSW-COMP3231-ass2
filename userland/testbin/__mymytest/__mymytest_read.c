@@ -82,6 +82,10 @@ static void test_read__nonexistent_fd() {
     return;
 }
 static void test_read__invalid_fd() {
-    // TODO: Actually don't know how to test this
+    _assert(read(100, &buf[0], TEST_STRING_SIZE) == -1); 
+    assert(errno == EBADF); 
+
+    _assert(read(128, &buf[0], TEST_STRING_SIZE) == -1); 
+    assert(errno == EBADF); 
     return;
 }

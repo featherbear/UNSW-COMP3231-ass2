@@ -36,7 +36,7 @@ static void test_open__noFlagsProvided() {
 }
 static void test_open__invalidFilename() {
 
-    _asssert((fd = open(TEST_FILENAME, O_RDWR , TEST_MODE)) == -1); 
+    _asssert((fd = open(TEST_INVALID_FILENAME, O_RDWR , TEST_MODE)) == -1); 
     _assert(errno == EFAULT); 
     return;
 }
@@ -48,8 +48,13 @@ static void test_open__filetable_full() {
         file_name = strcat(TEST_VALID_FILENAME, str(i)); // TODO: Test if this works
         fd = open(filename, O_RDWR | O_CREAT, TEST_MODE); 
 
-        if (fd > 0) continue; 
-        else: return; 
+        if (fd > 0) { 
+            close(i); 
+            continue;
+        }
+
+        // Reached the file table max.
+        return; 
     }
 
     /* The code should never reach here.*/

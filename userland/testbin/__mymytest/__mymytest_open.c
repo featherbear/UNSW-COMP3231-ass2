@@ -13,8 +13,8 @@ void test_open() {
 }
 
 static void test_open__noFlagsProvided() { 
-    int fd; 
-    fd = fopen(TEST_FILENAME, ); 
+    // int fd; 
+    // fd = fopen(TEST_FILENAME, ); 
     
     return;
 }

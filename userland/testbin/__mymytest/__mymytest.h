@@ -1,6 +1,7 @@
 #ifndef ___MYMYTEST_H_
 #define ___MYMYTEST_H_
 
+#include <errno.h>
 
 void test_open(void);
 void test_close(void);

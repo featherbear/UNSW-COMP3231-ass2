@@ -20,9 +20,7 @@ struct open_file_node {
     struct open_file *entry;
 };
 
-struct open_file_table *open_file_table = NULL; // 
-// FIXME: Should this be placed in file.c as a global  
-
+struct open_file_table *open_file_table = NULL;
 
 static struct open_file_node *__create_open_file_node() {
     struct open_file_node *open_file_node = kmalloc(sizeof(*open_file_node));
@@ -58,6 +56,7 @@ static struct open_file *__allocate_open_file() {
     KASSERT(open_file != NULL);
     // ENFILE
 
+    open_file->refs = 1;
     open_file->flags = 0;
     open_file->offset = 0;
     open_file->vnode = NULL;

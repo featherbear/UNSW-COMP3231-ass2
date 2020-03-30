@@ -72,38 +72,30 @@ int sys_close(fd_t fd, int *errno) {
     // Get the file 
     struct open_file *file;     
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
-
+    kprintf("Spinlock problem before the acquire?\n"); 
     FD_LOCK_ACQUIRE();
-    
+    kprintf("Spinlock problem after the acquire?\n"); 
     vfs_close(file->vnode);
     
     FD_ASSIGN(fd, NULL);
 
-    
     // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
-    // TODO: Move this part into assign_fd(...)?
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
-    
-    
-    ();
 
-
-    /*
     OF_LOCK_ACQUIRE();
-    // TODO: Check other references to the vnode - remove from OF table if all references have finished.
-    // only if reference count is 0 - which technically we haven't even made a counter yet.
-    
-    struct open_file_node *node = open_file->reference; 
-    struct open_file_node *p = node->prev; 
-    struct open_file_node *n = node->next; 
-    p->next = n; 
-    n->prev = p;   
-    kfree(file);
+
+    // Check other references to the vnode - remove from OF table if all references have finished.   
+    if (--file->refs == 0) {
+        struct open_file_node *node = file->reference; 
+        node->next->prev = node->prev;
+        node->prev->next = node->next
+
+        kfree(file);
+    }
     
     OF_LOCK_RELEASE();
-    */
 
     // Success 
     return 0; 

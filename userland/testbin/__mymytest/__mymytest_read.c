@@ -14,10 +14,13 @@ static void test_read__emptyString(void);
 static void test_read__readBeyondFile(void); // EBADF
 static void test_read__nonexistent_fd(void); // EBADF 
 static void test_read__invalid_fd(void);     // EBADF 
-static void test_read__no_permission(void);  // EBADF 
+static void test_read__wrongFlags(void);  // EBADF 
+
+int fd; 
+char buf[MAX_BUF];
 
 void test_read() {
-    test(test_read__no_permission);
+    test(test_read__wrongFlags);
     test(test_read__end_of_file);
     test(test_read__emptyString);
     test(test_read__readBeyondFile);
@@ -25,12 +28,7 @@ void test_read() {
     test(test_read__invalid_fd);
 }
 
-int fd; 
-char buf[MAX_BUF];
-
-// FIXME: Looks like `read` doesn't error with no permission
-// Only does EBADF, EFAULT and EIO
-static void test_read__no_permission() {
+static void test_read__wrongFlags() {
 
     fd = open(TEST_FILENAME, O_WRONLY | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);

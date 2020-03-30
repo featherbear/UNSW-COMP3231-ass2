@@ -31,12 +31,20 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
  
-    char *k_filename = kmalloc(PATH_MAX);
-    if ((*errno = copyinstr(filename, k_filename, PATH_MAX, NULL)) != 0) return -1; 
+    char *k_filename = kmalloc(PATH_MAX); 
+    // TODO: Check if allocated
+
+    if ((*errno = copyinstr(filename, k_filename, PATH_MAX, NULL)) != 0) {
+        // TODO: free memory
+        return -1; 
+    }
  
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
-    if ((*errno = vfs_open(k_filename, flags, mode, &open_file->vnode))) return -1;  
+    if ((*errno = vfs_open(k_filename, flags, mode, &open_file->vnode))) {
+        // TODO: free memory
+        return -1;  
+    }
     kfree(k_filename); 
 
     // If set to O_APPEND, set ptr to end, otherwise set to 0 

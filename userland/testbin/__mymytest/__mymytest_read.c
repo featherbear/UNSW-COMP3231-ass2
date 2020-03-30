@@ -54,15 +54,14 @@ static void test_read__end_of_file() {
 }
 static void test_read__emptyString() {
     
-
-// "A" points to 0x0000abcd
-// because it's a const in the program data
-// but yeah it shouldn't change anyway
-// but you also can't guarantee that the instance of "ABC" is the same memory address as another "ABC"
+    buf[0] = 'A';
 
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_ZERO)) == 0); 
     close(fd); 
+
+    _assert(buf[0] == 'A');
+
     return;
 }
 static void test_read__readBeyondFile() {
@@ -74,10 +73,9 @@ static void test_read__readBeyondFile() {
     return;
 }
 static void test_read__nonexistent_fd() {
-    // FIXME: (Comment) - Put this here instead of invalid because 100 is valid but nonexistent
+
     _assert(read(100, &buf[0], TEST_STRING_SIZE) == -1); 
     _assert(errno == EBADF); 
-
 
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     close(fd); 

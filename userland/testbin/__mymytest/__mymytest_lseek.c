@@ -33,22 +33,22 @@ void test_lseek() {
 
 static void test_lseek__set() {
 
-    _kassert(lseek(fd, 10, SEEK_SET) == 0);
-    _kassert(read(fd, &buff, 1) == 1);
+    _assert(lseek(fd, 10, SEEK_SET) == 0);
+    _assert(read(fd, &buff, 1) == 1);
     _assert(buff == '0'); // Offset 10 should have '0' (ASCII 30)
 
     return;
 }
 static void test_lseek__cur() {
 
-    _kassert(lseek(fd, 10, SEEK_SET) == 0);  // First set to offset 10
+    _assert(lseek(fd, 10, SEEK_SET) == 0);  // First set to offset 10
 
-    _kassert(lseek(fd, 5, SEEK_CUR) == 0);   // Increase offset by 5 (Offset now 15)
-    _kassert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
+    _assert(lseek(fd, 5, SEEK_CUR) == 0);   // Increase offset by 5 (Offset now 15)
+    _assert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
     _assert(buff == '1');                    // Offset 15 should have '1' (ASCII 35)
 
-    _kassert(lseek(fd, -11, SEEK_CUR) == 0); // Decrease offset by 11 (Offset now 5)
-    _kassert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
+    _assert(lseek(fd, -11, SEEK_CUR) == 0); // Decrease offset by 11 (Offset now 5)
+    _assert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
     _assert(buff == '1');                    // Offset 5 should have '1' (ASCII 35)
 
     return;

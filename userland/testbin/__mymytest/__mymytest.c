@@ -25,6 +25,8 @@ int main(int argc, char * argv[]) {
 
         test_dup2();
 
+        puts("\nSUCCESS: All tests completed!\n");
+
         return 0;
 }
 

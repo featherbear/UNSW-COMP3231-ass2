@@ -1,5 +1,5 @@
 #include "__mymytest.h"
-
+#include <limits.h>
 
 
 static void test_write__emptyString(void);
@@ -25,7 +25,15 @@ static void test_write__bufferTooBig() {
     return;
 }
 static void test_write__nonexistent_fd() {
-        return;
+    int ret;
+    
+    _assert((ret = write(3, "hello", 5)) == -1);
+    _assert(errno == EBADF);
+
+    _assert((ret = write(OPEN_MAX - 1, "hello", 5)) == -1);
+    _assert(errno == EBADF);
+
+    return;
 }
 static void test_write__no_permission() {
         return;
@@ -39,7 +47,12 @@ static void test_write__invalid_fd() {
     _assert((ret = write(-1, "hello", 5)) == -1);
     _assert(errno == EBADF);
 
-    _assert((ret = write(-1, "hello", 5)) == -1);
+    // OPEN_MAX - 1 is tested in nonexistent_fd(), and is not tested here
+
+    _assert((ret = write(OPEN_MAX, "hello", 5)) == -1);
+    _assert(errno == EBADF);
+
+    _assert((ret = write(OPEN_MAX + 1, "hello", 5)) == -1);
     _assert(errno == EBADF);
 
     return;

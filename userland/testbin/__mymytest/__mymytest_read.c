@@ -9,7 +9,7 @@
 
 static void test_read__end_of_file(void); // Should get 0 bytes after reading
 static void test_read__emptyString(void);
-static void test_read__readBeyondFile(void);
+static void test_read__readBeyondFile(void); // EBADF
 static void test_read__nonexistent_fd(void); // EBADF 
 static void test_read__invalid_fd(void);     // EBADF 
 static void test_read__no_permission(void);  // EBADF 
@@ -37,8 +37,13 @@ static void test_read__no_permission() {
 static void test_read__end_of_file() {
 
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
-    _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
-    _assert(errno == EPERM); 
+
+    // Read to the end
+    _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == TEST_LENGTH_GT_MAX);
+
+    // Try to read again 
+    _assert((read(fd, &buf[0], 1) == 0); 
+
     close(fd); 
     return;
 }
@@ -55,13 +60,22 @@ static void test_read__emptyString() {
     return;
 }
 static void test_read__readBeyondFile() {
+
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
-    _assert(errno == EPERM); 
+    _assert(errno == E); 
     close(fd); 
     return;
 }
 static void test_read__nonexistent_fd() {
+    
+    fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
+    close(fd); 
+
+    // Now that fd doesn't exist anymore. 
+    _assert((read(fd, &buf[0], TEST_LENGTH_ZERO) == -1); 
+    _assert(errno == )
+
     return;
 }
 static void test_read__invalid_fd() {

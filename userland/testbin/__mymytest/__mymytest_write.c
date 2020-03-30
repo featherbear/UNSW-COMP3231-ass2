@@ -1,6 +1,7 @@
 #include "__mymytest.h"
 
 #include <stdio.h>
+#include <assert.h>
 
 static void test_write__emptyString(void);
 static void test_write__bufferTooBig(void); // (Can we actualy test this. We can try :) 
@@ -36,5 +37,6 @@ static void test_write__out_of_space() {
 static void test_write__invalid_fd() {
     printf("Test!\n");
     printf("%d", errno);
+    assert(1);
         return;
 }

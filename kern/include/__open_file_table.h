@@ -26,6 +26,8 @@ void destroy_open_file_table(void);
 
 struct open_file *create_open_file(void);
 
+int release_open_file_reference(struct open_file *open_file);
+
 extern struct open_file_table *open_file_table;
 
 #endif /* ___OPEN_FILE_TABLE_H_ */

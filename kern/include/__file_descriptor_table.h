@@ -10,6 +10,7 @@
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
+#define FD_ASSIGN(fd, open_file) (curproc->p_fdtable->map[fd] = open_file)
 
 typedef int fd_t;
 

@@ -52,8 +52,10 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     open_file->flags = flags;
 
     // Map file descriptor to the open file
-    assign_fd(fd, open_file);
-    
+    FD_LOCK_ACQUIRE();
+    FD_ASSIGN(fd, open_file);
+    FD_LOCK_RELEASE();
+
     return fd;
 }
 
@@ -63,15 +65,19 @@ int sys_close(fd_t fd, int *errno) {
     struct open_file *file;     
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
 
-    vfs_close(file->vnode);
-    assign_fd(fd, NULL);
-
     FD_LOCK_ACQUIRE();
+    
+    vfs_close(file->vnode);
+    
+    FD_ASSIGN(fd, NULL);
+
+    
     // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
     // TODO: Move this part into assign_fd(...)?
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
+    
     FD_LOCK_RELEASE();
 
 
@@ -100,13 +106,28 @@ fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
         return -1;
     }
 
-    // Check if `newfd` is open, if so then close
-    struct file_descriptor_table *fdtable = curproc->p_fdtable;
-    if (fdtable->map[newfd] != NULL && sys_close(newfd, errno) != 0) {
+    if (oldfd == newfd) return newfd;
+    
+    FD_LOCK_ACQUIRE();
+
+    struct open_file *old_file = fdtable->map[oldfd];
+    if (old_file == NULL) {
+        *errno = EBADF;
+        FD_LOCK_RELEASE();
         return -1;
     }
 
-    assign_fd(newfd, fdtable->map[oldfd]);
+    // Check if `newfd` is open, if so then close
+    struct file_descriptor_table *fdtable = curproc->p_fdtable;
+    if (fdtable->map[newfd] != NULL && sys_close(newfd, errno) != 0) {
+        // errno set by sys_close
+        FD_LOCK_RELEASE();
+        return -1;
+    }
+
+    FD_ASSIGN(newfd, old_file);
+    FD_LOCK_RELEASE();
+
     return newfd;
 }
 
@@ -133,13 +154,12 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         lock_release(file->lock); 
         return -1; 
     } 
-    lock_release(file->lock);
  
     off_t change = new_uio.uio_offset - file->offset;
     file->offset = new_uio.uio_offset;
 
+    lock_release(file->lock);
 
-    
     /*
 
         // Get the length of the file 
@@ -175,7 +195,7 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // Check if we have permission to write
     int flags = file->flags; 
     if (!MATCH_BITMASK(flags, O_WRONLY) && !MATCH_BITMASK(flags, O_RDWR)) {
-        *errno = EPERM; 
+        *errno = EBADF;
         return -1; 
     }
 
@@ -186,18 +206,19 @@ int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     uio_init(&new_iov, &new_uio, buf, buflen, file->offset, UIO_WRITE);
 
     lock_acquire(file->lock);
-    if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) {  
 
+    if ((*errno = VOP_WRITE(file->vnode, &new_uio)) != 0) {  
         // Covers the case where no free space is left on the file (ENOSPC) 
         lock_release(file->lock);
         return -1;     
     } 
 
-    // TODO: Fixed file size!?!??!?!
+    off_t change = new_uio.uio_offset - file->offset;
+    file->offset = new_uio.uio_offset;
 
-    file->offset += buflen;
     lock_release(file->lock);
-    return buflen;
+
+    return change;
 }
 
 off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {

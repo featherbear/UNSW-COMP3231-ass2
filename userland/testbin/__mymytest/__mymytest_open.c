@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <err.h>
 #include <errno.h>
@@ -8,6 +9,7 @@
 
 #define TEST_VALID_FILENAME "test.file"
 #define TEST_INVALID_FILENAME "random.file"
+#define FD_MAX_SIZE 128
 #define TEST_MODE 0700
 
 static void test_open__noFlagsProvided(void); // EINVAL
@@ -43,24 +45,24 @@ static void test_open__invalidFilename() {
     return;
 }
 static void test_open__filetable_full() {
-    char *src = TEST_VALID_FILENAME;  
-    char *dest = str(i); 
+
+    int fd_max_reached = false; 
+    int *opened_fds = calloc(FD_MAX_SIZE); 
+
     for (int i = 3; i < 128; i++) { 
-        // char *strcat(char *dest, const char *src)
-        strcat(src, str(i)); // TODO: Test if this works
         fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
-
-        if (fd > 0) { 
-            close(i); 
-            continue;
+        if (fd > 0) opened_fds[i] = fd;          
+        else { 
+            fd_max_reached == true; 
+            break; 
         }
-
-        // Reached the file table max.
-        return; 
     }
 
-    /* The code should never reach here.*/
-    int f = 0
-    _assert(f != 0);
+    // Close all the opened files
+    for (int i = 3; i < 128; i++){ 
+        if (opened_fds[i] != 0) close(i); 
+    }
+
+    _assert(fd_max_reached == true); 
     return;
 }

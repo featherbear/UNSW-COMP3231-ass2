@@ -8,5 +8,13 @@ static void test_dup2__invalid_fd();
 */
 
 void test_dup2() {
-    
+    test_dup2__nonexistent_fd(); 
+    test_dup2__invalid_fd(); 
+}
+
+static void test_dup2__nonexistent_fd() {
+
+}
+static void test_dup2__invalid_fd() {
+
 }

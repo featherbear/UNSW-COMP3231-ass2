@@ -7,6 +7,30 @@ static void test_write__no_permission(); // EBADF
 static void test_write__out_of_space(); // ENOSPC
 static void test_write__invalid_fd(); // FD >= OPEN_MAX -> EBADF 
 
-void test_open() {
+void test_write() {
+    test_write__emptyString();
+    test_write__bufferTooBig();
+    test_write__nonexistent_fd();
+    test_write__no_permission();
+    test_write__out_of_space();
+    test_write__invalid_fd();
+}
+
+static void test_write__emptyString() {
+
+}
+static void test_write__bufferTooBig() {
+
+}
+static void test_write__nonexistent_fd() {
+    
+}
+static void test_write__no_permission() {
+    
+}
+static void test_write__out_of_space() {
+    
+}
+static void test_write__invalid_fd() {
     
 }

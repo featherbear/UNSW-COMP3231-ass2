@@ -109,11 +109,11 @@ fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
     if (oldfd == newfd) return newfd;
     
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
-
-    FD_LOCK_ACQUIRE();
-
     struct open_file *file; 
-    if ((*errno = get_open_file_from_fd(oldfd, &file)) != 0) {
+    
+    FD_LOCK_ACQUIRE();
+    
+    if ((file = fdtable->map[oldfd]) == NULL) {
         *errno = EBADF;
         FD_LOCK_RELEASE();
         return -1;
@@ -127,6 +127,7 @@ fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
     }
 
     FD_ASSIGN(newfd, file);
+    
     FD_LOCK_RELEASE();
 
     return newfd;

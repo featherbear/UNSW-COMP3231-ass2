@@ -1,5 +1,6 @@
 #include "__mymytest.h"
 #include <limits.h>
+#include <string.h>
 
 
 static void test_write__emptyString(void);
@@ -8,6 +9,7 @@ static void test_write__nonexistent_fd(void); // FD doesn't exist in FD table
 static void test_write__no_permission(void); // EBADF 
 static void test_write__out_of_space(void); // ENOSPC
 static void test_write__invalid_fd(void); // FD >= OPEN_MAX -> EBADF 
+
 
 void test_write() {
     test(test_write__emptyString);
@@ -18,15 +20,17 @@ void test_write() {
     test(test_write__invalid_fd);
 }
 
+// TODO: Check that the right bytes were written - may need to use read then?
+
 static void test_write__emptyString() {
+    _assert((ret = write(0, "hello", 0)) == 0);
+
     return;
 }
 static void test_write__bufferTooBig() {
     return;
 }
 static void test_write__nonexistent_fd() {
-    int ret;
-    
     _assert((ret = write(3, "hello", 5)) == -1);
     _assert(errno == EBADF);
 
@@ -42,8 +46,6 @@ static void test_write__out_of_space() {
         return;
 }
 static void test_write__invalid_fd() {
-    int ret;
-    
     _assert((ret = write(-1, "hello", 5)) == -1);
     _assert(errno == EBADF);
 

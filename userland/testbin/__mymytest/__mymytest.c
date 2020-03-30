@@ -8,6 +8,7 @@
 #include <errno.h>
 
 #include "__mymytest.h" // Function prototypes in `__mymytest.h`
+#include "pika.h"
 
 int main(int argc, char * argv[]) {
         (void) argc;
@@ -27,6 +28,9 @@ int main(int argc, char * argv[]) {
 
         puts("\nSUCCESS: All tests completed!\n");
 
+        // And for now an insanely slow write.
+        puts(PIKACHU);
+        
         return 0;
 }
 

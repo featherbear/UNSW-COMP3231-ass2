@@ -42,23 +42,24 @@ static void test_read__end_of_file() {
     write(fd, TEST_STRING, TEST_STRING_SIZE);
 
     // Read to the end of the file
-    _assert((read(fd, &buf[0], TEST_STRING_SIZE)) == TEST_STRING_SIZE);
+    _assert(read(fd, &buf[0], TEST_STRING_SIZE) == TEST_STRING_SIZE);
 
     // Try to read again 
-    _assert((read(fd, &buf[0], 1) == 0); 
+    _assert(read(fd, &buf[0], 1) == 0); 
 
     close(fd); 
     return;
 }
 static void test_read__emptyString() {
+    
 
-    buf[0] = "A";
+// "A" points to 0x0000abcd
+// because it's a const in the program data
+// but yeah it shouldn't change anyway
+// but you also can't guarantee that the instance of "ABC" is the same memory address as another "ABC"
 
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_ZERO)) == 0); 
-
-    // Check that buf hasn't been altered
-    _assert(buf[0] == "A"); 
     close(fd); 
     return;
 }
@@ -66,7 +67,7 @@ static void test_read__readBeyondFile() { // Means reading beyond the file size
 
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     write(fd, TEST_STRING, TEST_STRING_SIZE);
-    _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == TEST_STRING_SIZE);
+    _assert(read(fd, &buf[0], TEST_LENGTH_GT_MAX) == TEST_STRING_SIZE);
     close(fd); 
     return;
 }
@@ -76,16 +77,17 @@ static void test_read__nonexistent_fd() {
     close(fd); 
 
     // Now that fd doesn't exist anymore. 
-    _assert((read(fd, &buf[0], TEST_LENGTH_ZERO) == -1); 
+    _assert(read(fd, &buf[0], TEST_LENGTH_ZERO == -1); 
     _assert(errno == EBADF);
 
     return;
 }
+
 static void test_read__invalid_fd() {
     _assert(read(100, &buf[0], TEST_STRING_SIZE) == -1); 
-    assert(errno == EBADF); 
+    _assert(errno == EBADF); 
 
     _assert(read(128, &buf[0], TEST_STRING_SIZE) == -1); 
-    assert(errno == EBADF); 
+    _assert(errno == EBADF); 
     return;
 }

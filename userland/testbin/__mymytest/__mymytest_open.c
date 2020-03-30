@@ -53,14 +53,15 @@ static void test_open__invalidFilename() {
 static void test_open__filetable_full() {
 
     int fd_max_reached = false; 
-    int *opened_fds = malloc(FD_MAX_SIZE);
+    int *opened_fds = malloc(FD_MAX_SIZE); // FIXME: don't forget sizeof(int) nopt don't need. Complained when I added it in
+
     for (int i = 0; i < FD_MAX_SIZE; i++) { opened_fds[i] = 0; }  
 
     for (int i = 3; i < FD_MAX_SIZE; i++) { 
         fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
         if (fd > 0) opened_fds[i] = fd;          
         else { 
-            fd_max_reached == true; 
+            fd_max_reached = true;
             break; 
         }
     }

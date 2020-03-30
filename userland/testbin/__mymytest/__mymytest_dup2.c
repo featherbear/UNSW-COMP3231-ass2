@@ -34,12 +34,8 @@ static void test_dup2__invalid_fd() {
     
     // FD OPEN_MAX is invalid
     assert(dup2(1, OPEN_MAX) == -1); 
-    assert(errno == EBADF); // - 1 is valid because 127 < 128         . Yeah, it gives an error because it's valid
-    // dup2(1, OPEN_MAX - 1) returns 0
-    // so the assert therefore fails because 0 == -1 is false.
-// What I'm saaying that is it fails dup2(1, open_max) == -1
-    // FD OPEN_MAX + 1 is invalid
-    // rebuild.
+    assert(errno == EBADF); 
+
     assert(dup2(1, OPEN_MAX + 1) == -1);
     assert(errno == EBADF);
 

@@ -24,11 +24,12 @@ void test_lseek() {
     test(test_lseek__invalidWhence);
     test(test_lseek__invalidOffset);
 
-    _assert(close(fd) != 0);
+    _assert(close(fd) == 0);
 }
 
 
 static void test_lseek__set() {
+    
     return;
 }
 static void test_lseek__cur() {
@@ -47,6 +48,9 @@ static void test_lseek__unsupportedSeek() {
     return;
 }
 static void test_lseek__invalidWhence() {
+    _assert(lseek(fd, 0, 0) == -1);
+    _assert(errno == EINVAL);
+    
     return;
 }
 static void test_lseek__invalidOffset() {

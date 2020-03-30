@@ -28,7 +28,7 @@ char buf[MAX_BUF];
 
 static void test_read__no_permission() {
 
-    fd = open(TEST_FILENAME, OWRONLY | O_CREAT, TEST_MODE); 
+    fd = open(TEST_FILENAME, O_WRONLY | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
     // _assert(errno == ) // FIND OUT WHAT VOP_READ returns for the rror vlue
     close(fd); 

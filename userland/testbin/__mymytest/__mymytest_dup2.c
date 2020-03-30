@@ -14,30 +14,30 @@ void test_dup2() {
 
 static void test_dup2__nonexistent_fd() {
     // FD 10 doesn't exist
-    assert((ret = dup2(10, 11)) == -1);
+    assert(dup2(10, 11) == -1);
     assert(errno == EBADF);
 
     return;
 }
 static void test_dup2__invalid_fd() {
     // FD -1 is invalid
-    assert((ret = dup2(-1, 4)) == -1);
+    assert(dup2(-1, 4) == -1);
     assert(errno == EBADF);
     
     // FD OPEN_MAX is invalid
-    assert((ret = dup2(OPEN_MAX, 4)) == -1);
+    assert(dup2(OPEN_MAX, 4) == -1);
     assert(errno == EBADF);
 
     // FD OPEN_MAX + 1 is invalid
-    assert((ret = dup2(OPEN_MAX+1, 4)) == -1);
+    assert(dup2(OPEN_MAX+1, 4) == -1);
     assert(errno == EBADF);
     
     // FD OPEN_MAX is invalid
-    assert((ret = dup2(1, OPEN_MAX)) == -1);
+    assert(dup2(1, OPEN_MAX) == -1);
     assert(errno == EBADF);
 
     // FD OPEN_MAX + 1 is invalid
-    assert((ret = dup2(1, OPEN_MAX + 1)) == -1);
+    assert(dup2(1, OPEN_MAX + 1) == -1);
     assert(errno == EBADF);
 
     return;

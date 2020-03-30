@@ -21,6 +21,4 @@ void test_dup2(void);
 
 void test_lseek(void);
 
-int ret; // Am lazy.
-
 #endif /* ___MYMYTEST_H_ */

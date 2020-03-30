@@ -74,22 +74,20 @@ int sys_close(fd_t fd, int *errno) {
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
 
     FD_LOCK_ACQUIRE();
-    kprintf("Lock acquire");
-    vfs_close(file->vnode);
-    kprintf("closed\n");
+
     FD_ASSIGN(fd, NULL);
-kprintf("set null\n");
 
     // If there were originally no more free fd's, assign next_fd to be the fd-to-be-removed
     if (curproc->p_fdtable->next_fd == -1) {
         curproc->p_fdtable->next_fd = fd;
     }
 
+    FD_LOCK_RELEASE();
+
     // Decrease reference count; release_reference will remove the file from the OFT if there are no more references
     release_open_file_reference(file);
 
     // Success 
-    kprintf("END\n");
     return 0; 
 }
 

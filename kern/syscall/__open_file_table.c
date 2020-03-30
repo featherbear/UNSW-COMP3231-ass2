@@ -53,8 +53,12 @@ static struct open_file_node *__create_open_file_node() {
 }
 
 static void __destroy_open_file_node(struct open_file_node* open_file_node) {
+    kprintf("ENTER__\n");
     destroy_open_file(open_file_node->entry);
+    kprintf("destroy'd\n");
     kfree(open_file_node);
+    kprintf("freed\n");
+    kprintf("EXIT __\n");
 }
 
 static struct open_file *__allocate_open_file() {
@@ -82,7 +86,7 @@ struct open_file *create_open_file() {
 }
 
 static void destroy_open_file(struct open_file *open_file) {
-    // don't need to free vnode; done with vfs_close (I think)
+    vfs_close(open_file->vnode);
     lock_destroy(open_file->lock);
     kfree(open_file);
 }
@@ -119,23 +123,15 @@ int release_open_file_reference(struct open_file *open_file) {
     struct open_file_node *node = open_file->reference;
 
     OF_LOCK_ACQUIRE();
-
     int references = --node->refs;
-    
-    kprintf("Remaining references: %d\n", references);
-    // Check other references to the vnode - remove from OF table if all references have finished.   
-    if (references == 0) {
-        kprintf("Destroying");
-        node->next->prev = node->prev;
-        node->prev->next = node->next;
-
-
-        __destroy_open_file_node(node);
-    }
-
-    
-
     OF_LOCK_RELEASE();
 
-    return references;
+    // Remove from OF table if all references have finished.   
+    if (references != 0) return references;
+
+    if (node->next) node->next->prev = node->prev;
+    if (node->prev) node->prev->next = node->next;
+    __destroy_open_file_node(node);
+
+    return 0; // return 0
 }

@@ -2,6 +2,9 @@
 #define ___MYMYTEST_H_
 
 #include <errno.h>
+#include <stdio.h>
+
+#define test(fn) ({printf("Executing %s\n", #fn); fn();})
 
 void test_open(void);
 void test_close(void);

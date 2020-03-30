@@ -7,9 +7,9 @@ static void test_open__invalidFilename(void); // EFAULT
 static void test_open__filetable_full(void); // EMFILE
 
 void test_open() {
-    test_open__noFlagsProvided();
-    test_open__invalidFilename();
-    test_open__filetable_full();
+    test(test_open__noFlagsProvided);
+    test(test_open__invalidFilename);
+    test(test_open__filetable_full);
 }
 
 static void test_open__noFlagsProvided() { 

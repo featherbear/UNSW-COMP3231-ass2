@@ -10,14 +10,14 @@ static void test_lseek__invalidWhence(void); // EINVAL
 static void test_lseek__invalidOffset(void); // EINVAL (Resulting seek position would be negative) 
 
 void test_lseek() {
-    test_lseek__set();
-    test_lseek__cur();
-    test_lseek__end();
-    test_lseek__nonexistent_fd();
-    test_lseek__invalid_fd();
-    test_lseek__unsupportedSeek();
-    test_lseek__invalidWhence();
-    test_lseek__invalidOffset();
+    test(test_lseek__set);
+    test(test_lseek__cur);
+    test(test_lseek__end);
+    test(test_lseek__nonexistent_fd);
+    test(test_lseek__invalid_fd);
+    test(test_lseek__unsupportedSeek);
+    test(test_lseek__invalidWhence);
+    test(test_lseek__invalidOffset);
 }
 
 static void test_lseek__set() {

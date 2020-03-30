@@ -8,12 +8,12 @@ static void test_read__invalid_fd(void);     // EBADF
 static void test_read__no_permission(void);  // EBADF 
 
 void test_read() {
-    test_read__end_of_file();
-    test_read__emptyString();
-    test_read__readBeyondFile();
-    test_read__nonexistent_fd();
-    test_read__invalid_fd();
-    test_read__no_permission();
+    test(test_read__end_of_file);
+    test(test_read__emptyString);
+    test(test_read__readBeyondFile);
+    test(test_read__nonexistent_fd);
+    test(test_read__invalid_fd);
+    test(test_read__no_permission);
 }
 
 static void test_read__end_of_file() {

@@ -11,6 +11,7 @@
         "copyinout.h": "c",
         "syscall.h": "c",
         "spinlock.h": "c",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "functional": "cpp"
     }
 }

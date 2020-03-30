@@ -1,6 +1,6 @@
 #include "__mymytest.h"
 
-#include <stdio.h>
+
 #include <assert.h>
 
 static void test_write__emptyString(void);
@@ -11,12 +11,12 @@ static void test_write__out_of_space(void); // ENOSPC
 static void test_write__invalid_fd(void); // FD >= OPEN_MAX -> EBADF 
 
 void test_write() {
-    test_write__emptyString();
-    test_write__bufferTooBig();
-    test_write__nonexistent_fd();
-    test_write__no_permission();
-    test_write__out_of_space();
-    test_write__invalid_fd();
+    test(test_write__emptyString);
+    test(test_write__bufferTooBig);
+    test(test_write__nonexistent_fd);
+    test(test_write__no_permission);
+    test(test_write__out_of_space);
+    test(test_write__invalid_fd);
 }
 
 static void test_write__emptyString() {
@@ -35,8 +35,8 @@ static void test_write__out_of_space() {
         return;
 }
 static void test_write__invalid_fd() {
-    printf("Test!\n");
+    int fd = open("");
     printf("%d", errno);
-    assert(1);
+    assert(0);
         return;
 }

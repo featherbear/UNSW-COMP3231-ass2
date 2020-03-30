@@ -11,6 +11,8 @@
 #include "pika.h"
 
 int main(int argc, char * argv[]) {
+        putchar('\n');
+        
         (void) argc;
         (void) argv;
         

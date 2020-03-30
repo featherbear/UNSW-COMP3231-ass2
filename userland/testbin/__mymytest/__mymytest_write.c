@@ -1,7 +1,6 @@
 #include "__mymytest.h"
-#include <limits.h>
 #include <string.h>
-#include <unistd.h>
+
 
 static void test_write__success(void);
 static void test_write__emptyString(void);
@@ -27,6 +26,7 @@ static void test_write__success() {
     _assert((ret = write(STDOUT_FILENO, "test", 4)) == 4);
     _assert((ret = write(STDOUT_FILENO, "test", 3)) == 3);
 
+
     // TODO: Check that the right bytes were written - may need to use read then?
 
 }
@@ -46,12 +46,15 @@ static void test_write__bufferTooBig() {
 static void test_write__nonexistent_fd() {
     // As of executing this function, only FD 0 1 2 are open.
 
-    _assert((ret = write(3, "hello", 5)) == -1);
+    // fd shouldn't exist
+    _assert((ret = write(100, "hello", 5)) == -1);
     _assert(errno == EBADF);
 
     _assert((ret = write(OPEN_MAX - 1, "hello", 5)) == -1);
     _assert(errno == EBADF);
 
+    // TODO: Write into a closed fd
+    
     return;
 }
 static void test_write__no_permission() {

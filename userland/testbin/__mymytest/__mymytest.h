@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <limits.h>
+#include <unistd.h>
 
 #define test(fn) ({printf("Executing %s\n", #fn); fn();})
 #define _assert(statement) ({printf("├─ Evaluating `%s` - ", #statement); assert(statement); printf("success!\n");})

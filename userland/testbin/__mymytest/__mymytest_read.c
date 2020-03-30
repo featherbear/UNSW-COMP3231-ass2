@@ -17,6 +17,7 @@ void test_read() {
 }
 
 static void test_read__end_of_file() {
+    _assert((ret = read()))
     return;
 }
 static void test_read__emptyString() {

@@ -1,3 +1,7 @@
+#include <stdlib.h>
+#include <err.h>
+#include <errno.h>
+
 #include "__mymytest.h"
 
 #define TEST_FILENAME "insert_testing_filename.txt"
@@ -13,12 +17,14 @@ void test_open() {
 }
 
 static void test_open__noFlagsProvided() { 
-    // int fd; 
+    int fd; 
+    
     // fd = fopen(TEST_FILENAME, ); 
     
     return;
 }
 static void test_open__invalidFilename() {
+    
     return;
 }
 static void test_open__filetable_full() {

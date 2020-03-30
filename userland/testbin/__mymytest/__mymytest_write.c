@@ -21,15 +21,20 @@ void test_write() {
 }
 
 // TODO: Check that the right bytes were written - may need to use read then?
+//
 
 static void test_write__emptyString() {
-    _assert((ret = write(0, "hello", 0)) == 0);
+    _assert((ret = write(1, "", 0)) == 0);
+    _assert((ret = write(1, "hello", 0)) == 0);
+    return;
+}
 
-    return;
-}
 static void test_write__bufferTooBig() {
+    // ret = write(1, "", 10);
+    // printf("ret = %d ; errno = %d\n", ret, errno); // ---->> ret = 10; errno = 0;  // FIXME: Probably delete this test; can't test it?
     return;
 }
+
 static void test_write__nonexistent_fd() {
     _assert((ret = write(3, "hello", 5)) == -1);
     _assert(errno == EBADF);
@@ -40,9 +45,13 @@ static void test_write__nonexistent_fd() {
     return;
 }
 static void test_write__no_permission() {
-        return;
+    _assert((ret = write(0, "hi", 2)) == -1);
+    _assert(errno == EBADF); // fd is not a valid file descriptor, or was not opened for writing.
+
+    return;
 }
 static void test_write__out_of_space() {
+        // Does this happen with VOP_WRITE
         return;
 }
 static void test_write__invalid_fd() {

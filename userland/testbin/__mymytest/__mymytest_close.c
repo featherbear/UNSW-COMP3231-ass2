@@ -1,5 +1,7 @@
 #include "__mymytest.h"
 
+#define TEST_FILE "closeFile"
+
 static void test_close__nonexistent_fd(void); 
 static void test_close__closed_fd(void); 
 static void test_close__invalid_fd(void); 
@@ -17,7 +19,7 @@ static void test_close__nonexistent_fd() {
 
 static void test_close__closed_fd() {
 
-    int fd = open("", O_RDONLY, 700);
+    int fd = open(TEST_FILE, O_RDWR | O_CREAT);
 
     // Initial close should work
     _assert(close(fd) == 0);

@@ -86,7 +86,8 @@ int sys_close(fd_t fd, int *errno) {
         curproc->p_fdtable->next_fd = fd;
     }
     
-    FD_LOCK_RELEASE();
+    
+    ();
 
 
     /*

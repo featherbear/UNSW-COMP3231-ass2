@@ -9,9 +9,8 @@
 #include "__mymytest.h"
 
 #define TEST_VALID_FILENAME "test.file"
-#define TEST_INVALID_FILENAME "random.file"
+#define TEST_MISSING_FILENAME "random.file"
 #define INVALID_FLAG 1234
-#define FD_MAX_SIZE 128
 #define TEST_MODE 0700
 
 static void test_open__noFlagsProvided(void); // EINVAL
@@ -28,6 +27,7 @@ void test_open() {
 // Global Variable
 int fd;
 
+
 static void test_open__noFlagsProvided() { 
 
     fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
@@ -39,7 +39,7 @@ static void test_open__noFlagsProvided() {
     return;
 }
 static void test_open__nonexistent_file() {
-    _assert((fd = open(TEST_INVALID_FILENAME, O_RDWR , TEST_MODE)) == -1); 
+    _assert((fd = open(TEST_MISSING_FILENAME, O_RDWR , TEST_MODE)) == -1); 
     _assert(errno == ENOENT); 
     return;
 }
@@ -48,11 +48,11 @@ static void test_open__nonexistent_file() {
 static void test_open__filetable_full() {
 
     int fd_max_reached = false; 
-    int *opened_fds = malloc(FD_MAX_SIZE); // FIXME: don't forget sizeof(int) nopt don't need. Complained when I added it in
+    int *opened_fds = malloc(OPEN_MAX * sizeof(int));
 
-    for (int i = 0; i < FD_MAX_SIZE; i++) { opened_fds[i] = 0; }  
+    for (int i = 0; i < OPEN_MAX; i++) { opened_fds[i] = 0; }  
 
-    for (int i = 3; i < FD_MAX_SIZE; i++) { 
+    for (int i = 3; i < OPEN_MAX; i++) { 
         fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
         if (fd > 0) opened_fds[i] = fd;          
         else { 
@@ -62,7 +62,7 @@ static void test_open__filetable_full() {
     }
 
     // Close all the opened files
-    for (int i = 3; i < FD_MAX_SIZE; i++) { 
+    for (int i = 3; i < OPEN_MAX; i++) { 
         if (opened_fds[i] != 0) close(i); 
     }
     

@@ -18,6 +18,7 @@ struct open_file_node {
     struct open_file_node *prev;
     struct open_file_node *next;
     struct open_file *entry;
+    uint refs;                    // Number of references to this node's entry
 };
 
 struct open_file_table *open_file_table = NULL;
@@ -33,7 +34,7 @@ static struct open_file_node *__create_open_file_node() {
     open_file_node->prev = NULL;
     open_file_node->next = NULL;
     open_file_node->entry = NULL;
-
+    open_file_node->refs = 1;
 
     OF_LOCK_ACQUIRE();
     
@@ -99,4 +100,20 @@ void destroy_open_file_table() {
     KASSERT(open_file_table->head == NULL && open_file_table->tail == NULL);
     spinlock_cleanup(&open_file_table->lock);
     kfree(open_file_table);
+}
+
+// put it here for now
+void release_reference(struct open_file_node *node) {
+    OF_LOCK_ACQUIRE();
+
+    // Check other references to the vnode - remove from OF table if all references have finished.   
+    if (--node->refs == 0) {
+        struct open_file_node *node = file->reference; 
+        node->next->prev = node->prev;
+        node->prev->next = node->next
+
+        kfree(file);
+    }
+    
+    OF_LOCK_RELEASE();
 }

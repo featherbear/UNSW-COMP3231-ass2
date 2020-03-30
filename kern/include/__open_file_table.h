@@ -16,7 +16,6 @@ struct open_file {
     struct vnode *vnode; // Pointer to the VFS node
     struct lock *lock;   // Shared access 
     void *reference;     // Reference to the open_file_node ADT
-    int refs;            // Number of linked users of this struct
 };
 
 /* Initialise the global open file table */

@@ -53,12 +53,8 @@ static struct open_file_node *__create_open_file_node() {
 }
 
 static void __destroy_open_file_node(struct open_file_node* open_file_node) {
-    kprintf("ENTER__\n");
     destroy_open_file(open_file_node->entry);
-    kprintf("destroy'd\n");
     kfree(open_file_node);
-    kprintf("freed\n");
-    kprintf("EXIT __\n");
 }
 
 static struct open_file *__allocate_open_file() {
@@ -121,7 +117,7 @@ void destroy_open_file_table() {
 
 int release_open_file_reference(struct open_file *open_file) {
     struct open_file_node *node = open_file->reference;
-
+    
     OF_LOCK_ACQUIRE();
     int references = --node->refs;
     OF_LOCK_RELEASE();
@@ -132,6 +128,5 @@ int release_open_file_reference(struct open_file *open_file) {
     if (node->next) node->next->prev = node->prev;
     if (node->prev) node->prev->next = node->next;
     __destroy_open_file_node(node);
-
     return 0; // return 0
 }

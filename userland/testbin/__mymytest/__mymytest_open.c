@@ -46,8 +46,14 @@ static void test_open__filetable_full() {
     char *file_name; 
     for (int i = 3; i < 128; i++) { 
         file_name = strcat(TEST_VALID_FILENAME, str(i)); // TODO: Test if this works
-        
-        fd = open()
+        fd = open(filename, O_RDWR | O_CREAT, TEST_MODE); 
+
+        if (fd > 0) continue; 
+        else: return; 
     }
+
+    /* The code should never reach here.*/
+    int f = 0
+    _assert(f != 0);
     return;
 }

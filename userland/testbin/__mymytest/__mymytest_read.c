@@ -1,5 +1,7 @@
 #include "__mymytest.h"
 
+#define MAX_BUF 500 
+
 static void test_read__end_of_file(void); // Should get 0 bytes after reading
 static void test_read__emptyString(void);
 static void test_read__readBeyondFile(void);
@@ -16,8 +18,13 @@ void test_read() {
     test(test_read__no_permission);
 }
 
+int r; 
+char buf[MAX_BUF]
+
 static void test_read__end_of_file() {
-    _assert((ret = read()))
+    
+    assert((read()))
+
     return;
 }
 static void test_read__emptyString() {

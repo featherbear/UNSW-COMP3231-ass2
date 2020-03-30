@@ -2,15 +2,15 @@
 #define ___MYMYTEST_H_
 
 
-void test_open();
-void test_close();
+void test_open(void);
+void test_close(void);
 
-void test_write(); 
-void test_read();
+void test_write(void); 
+void test_read(void);
 
-void test_dup2();
+void test_dup2(void);
 
-void test_lseek();
+void test_lseek(void);
 
 
 #endif /* ___MYMYTEST_H_ */

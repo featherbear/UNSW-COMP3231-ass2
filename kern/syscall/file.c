@@ -84,20 +84,11 @@ int sys_close(fd_t fd, int *errno) {
         curproc->p_fdtable->next_fd = fd;
     }
 
-    OF_LOCK_ACQUIRE();
-
-    
-    release_reference(file->reference);
-
-    if (--file->refs == 0) {
-        struct open_file_node *node = file->reference; 
-        node->next->prev = node->prev;
-        node->prev->next = node->next
-
+   
+    if (release_reference(file->reference) == 0) {
         kfree(file);
     }
-    
-    OF_LOCK_RELEASE();
+
 
 going to move the reference count to the node
 

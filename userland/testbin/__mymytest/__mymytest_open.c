@@ -15,13 +15,13 @@
 #define TEST_MODE 0700
 
 static void test_open__noFlagsProvided(void); // EINVAL
-static void test_open__invalidFilename(void); // EFAULT
+static void test_open__nonexistent_file(void); // ENOENT
 static void test_open__filetable_full(void); // EMFILE
 
 
 void test_open() {
     test(test_open__noFlagsProvided);
-    test(test_open__invalidFilename);
+    test(test_open__nonexistent_file);
     test(test_open__filetable_full);
 }
 
@@ -30,7 +30,6 @@ int fd;
 
 static void test_open__noFlagsProvided() { 
 
-    // Only doing this because I don't know where to keep the file
     fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     close(fd); 
 
@@ -39,15 +38,11 @@ static void test_open__noFlagsProvided() {
 
     return;
 }
-static void test_open__invalidFilename() {
-    // FIXME: What's considered invalid?
-
+static void test_open__nonexistent_file() {
     _assert((fd = open(TEST_INVALID_FILENAME, O_RDWR , TEST_MODE)) == -1); 
-    _assert(errno == EFAULT); 
+    _assert(errno == ENOENT); 
     return;
 }
-
-// TODO:  Implement    ENOENT		The named file does not exist, and O_CREAT was not specified.
 
 
 static void test_open__filetable_full() {

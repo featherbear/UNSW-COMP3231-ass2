@@ -12,6 +12,7 @@ static void test_lseek__invalidWhence(void); // EINVAL
 static void test_lseek__invalidOffset(void); // EINVAL (Resulting seek position would be negative) 
 
 int fd;
+char buff;
 
 void test_lseek() {
     fd = open("test_lseek", O_RDWR | O_CREAT);
@@ -31,19 +32,44 @@ void test_lseek() {
 
 
 static void test_lseek__set() {
-    
+
+    _kassert(lseek(fd, 10, SEEK_SET) == 0);
+    _kassert(read(fd, &buff, 1) == 1);
+    _assert(buff == '0'); // Offset 10 should have '0' (ASCII 30)
+
     return;
 }
 static void test_lseek__cur() {
+
+    _kassert(lseek(fd, 10, SEEK_SET) == 0);  // First set to offset 10
+
+    _kassert(lseek(fd, 5, SEEK_CUR) == 0);   // Increase offset by 5 (Offset now 15)
+    _kassert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
+    _assert(buff == '1');                    // Offset 15 should have '1' (ASCII 35)
+    _kassert(lseek(fd, -11, SEEK_CUR) == 0); // Decrease offset by 11 (Offset now 5)
+    _kassert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
+    _assert(buff == '1');                    // Offset 5 should have '1' (ASCII 35)
+
     return;
 }
 static void test_lseek__end() {
     return;
 }
 static void test_lseek__nonexistent_fd() {
+    _assert(lseek(150, 0, SEEK_SET) == -1);
+    _assert(errno == EBADF);
+
+    // TODO: Seek a closed fd
+
     return;
 }
 static void test_lseek__invalid_fd() {
+    _assert(lseek(-1, 0, SEEK_SET) == -1);
+    _assert(errno == EBADF);
+
+    _assert(lseek(OPEN_MAX, 0, SEEK_SET) == -1);
+    _assert(errno == EBADF);
+    
     return;
 }
 static void test_lseek__unsupportedSeek() {

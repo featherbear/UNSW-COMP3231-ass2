@@ -1,8 +1,9 @@
 #include "__mymytest.h"
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 
-
+static void test_write__success(void);
 static void test_write__emptyString(void);
 static void test_write__bufferTooBig(void); // (Can we actualy test this. We can try :) 
 static void test_write__nonexistent_fd(void); // FD doesn't exist in FD table
@@ -12,6 +13,7 @@ static void test_write__invalid_fd(void); // FD >= OPEN_MAX -> EBADF
 
 
 void test_write() {
+    test(test_write__success);
     test(test_write__emptyString);
     test(test_write__bufferTooBig);
     test(test_write__nonexistent_fd);
@@ -20,12 +22,18 @@ void test_write() {
     test(test_write__invalid_fd);
 }
 
-// TODO: Check that the right bytes were written - may need to use read then?
-//
+
+static void test_write__success() {
+    _assert((ret = write(STDOUT_FILENO, "test", 4)) == 4);
+    _assert((ret = write(STDOUT_FILENO, "test", 3)) == 3);
+
+    // TODO: Check that the right bytes were written - may need to use read then?
+
+}
 
 static void test_write__emptyString() {
-    _assert((ret = write(1, "", 0)) == 0);
-    _assert((ret = write(1, "hello", 0)) == 0);
+    _assert((ret = write(STDOUT_FILENO, "", 0)) == 0);
+    _assert((ret = write(STDOUT_FILENO, "hello", 0)) == 0);
     return;
 }
 
@@ -36,6 +44,8 @@ static void test_write__bufferTooBig() {
 }
 
 static void test_write__nonexistent_fd() {
+    // As of executing this function, only FD 0 1 2 are open.
+
     _assert((ret = write(3, "hello", 5)) == -1);
     _assert(errno == EBADF);
 
@@ -45,7 +55,7 @@ static void test_write__nonexistent_fd() {
     return;
 }
 static void test_write__no_permission() {
-    _assert((ret = write(0, "hi", 2)) == -1);
+    _assert((ret = write(STDIN_FILENO, "hi", 2)) == -1);
     _assert(errno == EBADF); // fd is not a valid file descriptor, or was not opened for writing.
 
     return;

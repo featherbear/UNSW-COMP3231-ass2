@@ -36,9 +36,9 @@ struct file_descriptor_table *create_file_table(void);
 /* Destroys and unlinks FD table from the current process */
 void destroy_file_table(struct file_descriptor_table *fdtable);
 
+// Check if the file descriptor is of a reasonable value
+// Does NOT check if the file descriptor exists
 bool check_invalid_fd(fd_t fd);
-
-void assign_fd(fd_t fd, struct open_file *open_file);
 
 /* Get the open file entry associated with the fd for the current process 
 

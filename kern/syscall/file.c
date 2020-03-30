@@ -190,6 +190,8 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
 int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {  
     
+    // TODO: EPERM - An append-only flag is set on the file, but the caller is attempting to write before the current end of file.
+
     // Get the file 
     struct open_file *file; 
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;

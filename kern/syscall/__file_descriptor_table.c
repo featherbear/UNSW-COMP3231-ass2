@@ -31,7 +31,6 @@ struct file_descriptor_table *create_file_table() {
     KASSERT(fdtable->map != NULL);
     memset(fdtable->map, 0, OPEN_MAX * sizeof(struct open_file *));
 
-
     spinlock_init(&fdtable->lock);
 
     struct open_file *stdin_file = create_open_file();
@@ -91,12 +90,10 @@ int get_free_fd(int *errno) {
     return 0;
 }
 
-// TODO: Meta
 bool check_invalid_fd(fd_t fd) {
     return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
 }
 
-/* Retrieves `open_file` from given file descriptor. If invalid, return EBADF */
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
     if ((check_invalid_fd(fd)) || (*open_file = curproc->p_fdtable->map[fd]) == NULL) {

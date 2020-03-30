@@ -134,23 +134,35 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         return -1; 
     } 
     lock_release(file->lock);
+ 
+    off_t change = new_uio.uio_offset - file->offset;
+    file->offset = new_uio.uio_offset;
+
+
     
-    // Get the length of the file 
-    struct stat stat; 
-    VOP_STAT(file->vnode, &stat);
-    int file_length = stat.st_size;
+    /*
 
-    // If reading past the end of the file, stop at the end (and set the offset)
-    if (file->offset + buflen > file_length) { 
-        int read_bytes = file_length - file->offset;
-        KASSERT(read_bytes >= 0);
-        file->offset = file_length;
-        return read_bytes;
-    } 
+        // Get the length of the file 
+        struct stat stat; 
+        VOP_STAT(file->vnode, &stat);
+        int file_length = stat.st_size;
+        kprintf("KERNEL :: Change %d into %d\n", (int) file->offset, (int) new_uio.uio_offset);
 
-    // Add on the newly read offset
-    file->offset += buflen;
-    return buflen; 
+        // If reading past the end of the file, stop at the end (and set the offset)
+        if (file->offset + buflen > file_length) { 
+            int read_bytes = file_length - file->offset;
+            KASSERT(read_bytes >= 0);
+            file->offset = file_length;
+            return read_bytes;
+        } 
+
+        // Add on the newly read offset
+        file->offset += buflen;
+
+         return buflen; 
+        */
+    
+    return change;
 }
 
 

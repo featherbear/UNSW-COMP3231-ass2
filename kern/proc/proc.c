@@ -322,14 +322,19 @@ proc_setas(struct addrspace *newas)
 	return oldas;
 }
 
-/* 
- * Make a copy of proc 
- * Also copies proc->fd_table 
+/*
+ * Create a fresh proc for use by runprogram.
+ *
+ * It will have no address space and will inherit the current
+ * process's (that is, the kernel menu's) current directory.
+ 
+struct proc *
+proc_create_runprogram(const char *name)
+{
 
-
-int proc_make_copy (struct proc *src, struct proc **dest ) { 
-
-	
+Creates a clone of given proc _src_ with the same fd_table but a different address_space 
+int proc_clone() { 
+	struct proc *clone = proc_create_runprogram()
 }
 
  */

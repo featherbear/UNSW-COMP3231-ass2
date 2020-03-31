@@ -65,7 +65,11 @@ static void test_lseek__nonexistent_fd() {
     _assert(lseek(150, 0, SEEK_SET) == -1);
     _assert(errno == EBADF);
 
-    // TODO: Seek a closed fd
+    close(fd);
+    // TODO: Seek a closed fdx
+    _assert(lseek(fd, 0, SEEK_SET) == -1);
+    fd = open("test_lseek", O_RDWR | O_CREAT);
+    _assert(fd != -1);
 
     return;
 }

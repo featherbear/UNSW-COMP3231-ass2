@@ -10,7 +10,9 @@
 
 #define FD_LOCK_ACQUIRE() (spinlock_acquire(&curproc->p_fdtable->lock))
 #define FD_LOCK_RELEASE() (spinlock_release(&curproc->p_fdtable->lock))
+
 #define FD_ASSIGN(fd, open_file) (curproc->p_fdtable->map[fd] = open_file)
+#define IS_VALID_FD(fd) (0 <= fd && fd < OPEN_MAX)
 
 typedef int fd_t;
 
@@ -35,10 +37,6 @@ struct file_descriptor_table *create_file_table(void);
 
 /* Destroys and unlinks FD table from the current process */
 void destroy_file_table(struct file_descriptor_table *fdtable);
-
-// Check if the file descriptor is of a reasonable value
-// Does NOT check if the file descriptor exists
-bool check_invalid_fd(fd_t fd);
 
 /* Get the open file entry associated with the fd for the current process 
 

@@ -101,12 +101,12 @@ int sys_close(fd_t fd, int *errno) {
 }
 
 fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
-    if (check_invalid_fd(oldfd) || check_invalid_fd(newfd)) {
+    if (!IS_VALID_FD(oldfd) || !IS_VALID_FD(newfd)) {
         *errno = EBADF;
         return -1;
     }
 
-kprintf("VALID FDs\n");
+    kprintf("%d and %d are VALID FDs\n" ,oldfd, newfd);
 
     if (oldfd == newfd) return newfd;
     

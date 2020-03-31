@@ -136,14 +136,17 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     
     // Get the file 
     struct open_file *file; 
-    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
-
+    if ((*errno = get_open_file_from_fd(fd, &file)) != 0) {
+        kprintf("OPEN_FD FAIL\n");
+        return -1;
+    }
     // Check the permissions 
     int flags = file->flags;  
     // (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR))
     // doesn't work because O_RDONLY is 0
     if ( MATCH_BITMASK(flags, O_WRONLY) || !MATCH_BITMASK(flags, O_RDWR)) { 
         *errno = EBADF; 
+        kprintf("RET: EBADF\n");
         return -1;  
     } 
 
@@ -155,12 +158,14 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     lock_acquire(file->lock); 
     if ((*errno = VOP_READ(file->vnode, &new_uio)) != 0) { 
         lock_release(file->lock); 
+        kprintf("VOP_READ_FAIL\n");
         return -1; 
     } 
  
     off_t change = new_uio.uio_offset - file->offset;
     file->offset = new_uio.uio_offset;
 
+    kprintf("CHANGE %d\n", (int) change);
     lock_release(file->lock);
 
     /*
@@ -358,6 +363,9 @@ int execv(userptr program, char **args, int *errno) {
     // Check the args, should be terminated by '\0'
     // copyinstr to copy int argv[] and find int argc 
     error check argv[argc] == "\0"; 
+
+    replace existsing address space with a brand new one for the executable 
+    > as_create 
 
 
  	ENODEV	The device prefix of program did not exist.

@@ -253,7 +253,7 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
             return -1; 
     }
 
-    // `Seek
+    // Seek
     off_t curPos, newPos;
     curPos = newPos = open_file->offset;
 
@@ -271,10 +271,11 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
         case SEEK_END:
             VOP_STAT(open_file->vnode, &stat);
             newPos = stat.st_size + pos;
+            kprintf("%d %lld\n", (int)newPos, newPos);
             break;
     }
 
-    if (newPos < 0) {
+    if (newPos < (long long) 0) {
         *errno = EINVAL;
         return -1;
     }
@@ -282,6 +283,7 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
     open_file->offset = newPos;
 
     // Success
+    kprintf("RETURNING %lld\n", newPos);
     return newPos;    
 }
 
@@ -341,9 +343,10 @@ void mips_usermode(struct trapframe *tf)
 pid_t sys_fork(int *errno) { 
 
     // Check if we still have space for a new process 
-    pid_t new_pid; 
-    if ((new_pid = get_pid()) == -1) == -1) { 
-        *errno
+    pid_t new_pid = get_pid(); 
+    if ((new_pid == -1) { 
+        *errno = EMPROC; 
+        return -1
     }  
 
     // Create a new process  
@@ -354,10 +357,13 @@ pid_t sys_fork(int *errno) {
     struct addrspace *newProcAs = as_create(...);  
     if ((*errno = as_copy(curProcAs, *newProcAs)) != 0) return -1; 
 
+    // Set the FD_TABLE 
+    struct file_descriptor_table *new_fdTable
+    if ((*errno = create_file_table(*new_fdTable)) == -1) return -1 
+    copy_file_descriptor_table(curproc->fd_table, *new_fdTable)
+ // TODO: Need to write this function     
 
 
-    Duplicate proc and assigns it a pid 
-    So need to decipher a system to manage the different pids
     File hand objects in the table are shared so proc->fd_table == new_proc->fd_ta
     In the child process, 0 is returned
     In the parent process, the new pid_t is returned 

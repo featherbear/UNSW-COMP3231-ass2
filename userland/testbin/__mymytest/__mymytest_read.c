@@ -83,7 +83,7 @@ static void test_read__nonexistent_fd() {
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     close(fd); 
 
-    // Now that fd doesn't exist anymore. 
+    // Now that fd doesn't exist anymore, it should error
     _assert(read(fd, &buf[0], TEST_LENGTH_ZERO) == -1); 
     _assert(errno == EBADF);
 

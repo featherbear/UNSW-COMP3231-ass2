@@ -27,11 +27,11 @@ static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t 
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
-    // WHY DOES O_RDONLY HAVE TO BE 00
-    // if ((flags & O_ACCMODE) == 0) {
-    //     *errno = EINVAL;
-    //     return -1;
-    // } 
+    // Mututal exclusion between O_RDONLY, O_WRONLY and O_RDWR
+    if ((flags & O_ACCMODE) == O_ACCMODE) {
+        *errno = EINVAL;
+        return -1;
+    } 
 
     // Find an empty file descriptor number
     fd_t fd;
@@ -340,6 +340,24 @@ void mips_usermode(struct trapframe *tf)
  *                you.
  *
 
+ 
+ * Create a new thread based on an existing one.
+ *
+ * The new thread has name NAME, and starts executing in function
+ * ENTRYPOINT. DATA1 and DATA2 are passed to ENTRYPOINT.
+ *
+ * The new thread is created in the process P. If P is null, the
+ * process is inherited from the caller. It will start on the same CPU
+ * as the caller, unless the scheduler intervenes first.
+ 
+int
+thread_fork(const char *name,
+	    struct proc *proc,
+	    void (*entrypoint)(void *data1, unsigned long data2),
+	    void *data1, 
+		unsigned long data2)
+{
+
 pid_t sys_fork(struct trapframe *tf, int *errno) { 
 
     // TODO:     ENOMEM	Sufficient virtual memory for the new process was not available.
@@ -354,6 +372,8 @@ pid_t sys_fork(struct trapframe *tf, int *errno) {
 
     // Create a new process  
     struct proc *new_process = proc_create("name???? What do we even name it"); 
+    // Maybe we can use this one 
+    int e = proc_clone()
 
     // Set the address Space 
     struct addrspace *curProcAs = proc_getas(...); 

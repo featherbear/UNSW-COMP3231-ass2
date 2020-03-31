@@ -13,36 +13,26 @@
 #define INVALID_FLAG 4 // Flag needs one of O_RDONLY, O_WRONLY, or O_RDWR
 #define TEST_MODE 0700
 
-static void test_open__noFlagsProvided(void); // EINVAL
+static void test_open__invalidFlagsProvided(void); // EINVAL
 static void test_open__nonexistent_file(void); // ENOENT
 static void test_open__filetable_full(void); // EMFILE
 
 
 void test_open() {
-    test(test_open__noFlagsProvided);
+    test(test_open__invalidFlagsProvided);
     test(test_open__nonexistent_file);
     test(test_open__filetable_full);
 }
 
-// Global Variable
-int fd;
+static void test_open__invalidFlagsProvided() { 
 
-
-static void test_open__noFlagsProvided() { 
-
-    fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
-    close(fd); 
-
-    return;
-
-    // FIXME:
-    _assert((fd = open(TEST_VALID_FILENAME, INVALID_FLAG, TEST_MODE)) == -1); 
+    _assert(open(TEST_VALID_FILENAME, O_WRONLY | O_RDWR, TEST_MODE) == -1); 
     _assert(errno == EINVAL); 
 
     return;
 }
 static void test_open__nonexistent_file() {
-    _assert((fd = open(TEST_MISSING_FILENAME, O_RDWR , TEST_MODE)) == -1); 
+    _assert(open(TEST_MISSING_FILENAME, O_RDWR , TEST_MODE) == -1); 
     _assert(errno == ENOENT); 
     return;
 }

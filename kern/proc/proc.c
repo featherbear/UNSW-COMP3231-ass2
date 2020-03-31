@@ -332,10 +332,10 @@ proc_setas(struct addrspace *newas)
     struct addrspace *newProcAs = as_create(...);  
     if ((*errno = as_copy(curProcAs, *newProcAs)) != 0) return -1; 
 
-	// Have the same fd tabl 
+	// Set the fd_table
 	// TODO: Import #include <__file_descriptor_table.h> HELP 
 	struct file_descriptor_table *fdt_clone; 
-	if (clone_fd())
+	if (clone_fd(src->fd_table, &ftd_clone) == -1) return -1;
 }
 
  */

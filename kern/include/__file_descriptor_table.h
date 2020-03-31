@@ -45,5 +45,10 @@ void destroy_file_table(struct file_descriptor_table *fdtable);
 */
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file); 
 
+/* 
+ * Create a deep copy of a file_descriptor_table 
+ * TODO: Uncomment this section 
+struct file_descriptor_table clone_fd();
+ */
 
 #endif /* ___FILE_DESCRIPTOR_TABLE_H_ */

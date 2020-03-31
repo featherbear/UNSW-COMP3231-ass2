@@ -95,7 +95,17 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
 
 /*
  * Create a deep copy of a file_descriptor_table  
+ * Return NULL on error 
  * TODO: Include this function declaration in "__file_descriptor_table.h"
-int clone_fd(struct file_descriptor_table *src, struct file_descriptor_table **dest)
+ * TODO: Not sure if the pointers are right
+struct file_descriptor_table clone_fd() { 
+    struct file_desccriptor_table *new_ft = create_file_table(); 
+
+    FD_LOCK_ACQUIRE() 
+    new_tf->next_fd = curproc->next_fd; 
+
+    
+
+}
 
 */

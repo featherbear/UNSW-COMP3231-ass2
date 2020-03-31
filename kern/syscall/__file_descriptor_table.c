@@ -83,8 +83,9 @@ int get_free_fd(int *errno) {
     return 0;
 }
 
+#define IS_VALID_FD(fd) ()
 bool check_invalid_fd(fd_t fd) {
-    return (fd < 0 || fd >= OPEN_MAX) ? EBADF : 0;
+    return fd < 0 || fd >= OPEN_MAX;
 }
 
 int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {

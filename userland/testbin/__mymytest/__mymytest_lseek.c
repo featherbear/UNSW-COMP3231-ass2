@@ -115,8 +115,7 @@ static void test_lseek__invalidOffset() {
     _assert(lseek(fd, -11, SEEK_CUR) == -1);
     _assert(errno == EINVAL);
 
-    printf("%lld\n", lseek(fd, -(sizeof(writeBuff) + 1), SEEK_END));
-    _assert(lseek(fd, -(sizeof(writeBuff) + 1), SEEK_END) == -1);
+    _assert(lseek(fd, -24, SEEK_END) == -1);
     _assert(errno == EINVAL);
 
     return;

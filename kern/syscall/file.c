@@ -106,6 +106,8 @@ fd_t sys_dup2(fd_t oldfd, fd_t newfd, int *errno) {
         return -1;
     }
 
+kprintf("VALID FDs\n");
+
     if (oldfd == newfd) return newfd;
     
     struct file_descriptor_table *fdtable = curproc->p_fdtable;
@@ -271,11 +273,10 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
         case SEEK_END:
             VOP_STAT(open_file->vnode, &stat);
             newPos = stat.st_size + pos;
-            kprintf("%d %lld\n", (int)newPos, newPos);
             break;
     }
 
-    if (newPos < (long long) 0) {
+    if (newPos < 0) {
         *errno = EINVAL;
         return -1;
     }
@@ -283,7 +284,6 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
     open_file->offset = newPos;
 
     // Success
-    kprintf("RETURNING %lld\n", newPos);
     return newPos;    
 }
 
@@ -308,7 +308,7 @@ static void uio_init (
             .uio_resid = len,
             .uio_segflg = UIO_USERSPACE,
             .uio_rw = rw,
-            .uio_space = proc_getas() // TODO: FIXME:
+            .uio_space = proc_getas()
     };
 }
  
@@ -340,12 +340,15 @@ void mips_usermode(struct trapframe *tf)
  *                you.
  *
 
-pid_t sys_fork(int *errno) { 
+pid_t sys_fork(struct trapframe *tf, int *errno) { 
+
+    // TODO:     ENOMEM	Sufficient virtual memory for the new process was not available.
+
 
     // Check if we still have space for a new process 
     pid_t new_pid = get_pid(); 
     if ((new_pid == -1) { 
-        *errno = EMPROC; 
+        *errno = EMPROC;  // The current user already has too many processes.
         return -1
     }  
 
@@ -364,17 +367,11 @@ pid_t sys_fork(int *errno) {
  // TODO: Need to write this function     
 
 
-    File hand objects in the table are shared so proc->fd_table == new_proc->fd_ta
-    In the child process, 0 is returned
     In the parent process, the new pid_t is returned 
 
     return -1 and set errno 
-    EMPROC	The current user already has too many processes.
-    ENPROC	There are already too many processes on the system.
-    ENOMEM	Sufficient virtual memory for the new process was not available.
-
-    
-}
+     
+}return new_pid;
 
 int execv(userptr program, char **args, int *errno) { 
     replace the currently executing program with a newly loaded program image. 

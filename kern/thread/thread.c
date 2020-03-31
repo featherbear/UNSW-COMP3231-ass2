@@ -495,7 +495,8 @@ int
 thread_fork(const char *name,
 	    struct proc *proc,
 	    void (*entrypoint)(void *data1, unsigned long data2),
-	    void *data1, unsigned long data2)
+	    void *data1, 
+		unsigned long data2)
 {
 	struct thread *newthread;
 	int result;

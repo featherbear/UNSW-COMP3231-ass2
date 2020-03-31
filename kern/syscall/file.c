@@ -21,16 +21,17 @@
 
 
 
-#define MATCH_BITMASK(value, mask) ((value & mask) == mask)
+#define MATCH_BITMASK(value, mask) (((value) & (mask)) == mask)
 
 static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t len, off_t offset, enum uio_rw);  // FIXME: Not sure if `enum rw` or `uio_rw rw`
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
-    if ((flags & O_ACCMODE) == 0) {
-        *errno = EINVAL;
-        return -1;
-    } 
+    // WHY DOES O_RDONLY HAVE TO BE 00
+    // if ((flags & O_ACCMODE) == 0) {
+    //     *errno = EINVAL;
+    //     return -1;
+    // } 
 
     // Find an empty file descriptor number
     fd_t fd;
@@ -141,10 +142,11 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
         return -1;
     }
     // Check the permissions 
-    int flags = file->flags;  
+    int flags = file->flags;
+    kprintf("%d --\n", flags);  
     // (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR))
     // doesn't work because O_RDONLY is 0
-    if ( MATCH_BITMASK(flags, O_WRONLY) || !MATCH_BITMASK(flags, O_RDWR)) { 
+    if ( ((flags & O_ACCMODE) != O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR)) { 
         *errno = EBADF; 
         kprintf("RET: EBADF\n");
         return -1;  
@@ -378,8 +380,12 @@ int execv(userptr program, char **args, int *errno) {
     EIO	A hard I/O error occurred.
     EFAULT	One of the arguments is an invalid pointer.
 }
-
-
+In __pid_table.c  
+Where should this table be stored? Globally like OF_TABLE
+struct pid_table {  
+    int table[PID_MAX] // Located in limits.h
+    
+}
 
 
 

@@ -15,13 +15,6 @@ struct file_descriptor_table *create_file_table() {
 
 
     //TODO: MEMORY MANAGE THIS ENTIRE FUNCTION
-    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
-    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
-    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
-    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
-    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
-    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
-    //TODO: MEMORY (commander) THIS ENTIRE FUNCTION
 
     struct file_descriptor_table *fdtable = kmalloc(sizeof(*fdtable));
     KASSERT(fdtable != NULL);         // return ENOMEM;

@@ -70,6 +70,7 @@ struct addrspace {
  *                may find you want to change the argument list. May
  *                return NULL on out-of-memory error.
  *
+int               as_copy(struct addrspace *src, struct addrspace **ret);
  *    as_copy   - create a new address space that is an exact copy of
  *                an old one. Probably calls as_create to get a new
  *                empty address space and fill it in, but that's up to

@@ -32,7 +32,9 @@ static void test_read__wrongFlags() {
 
     fd = open(TEST_FILENAME, O_WRONLY | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
-    _assert(errno == EBADF);
+    printf("%d %d\n", errno, EBADF);
+    _assert(errno == EROFS );
+    _assert(0);
     close(fd); 
     return;
 }

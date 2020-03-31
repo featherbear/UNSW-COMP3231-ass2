@@ -15,6 +15,7 @@
         "functional": "cpp",
         "cstdlib": "c",
         "memory": "c",
-        "seek.h": "c"
+        "seek.h": "c",
+        "stdlib.h": "c"
     }
 }

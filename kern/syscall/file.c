@@ -140,8 +140,9 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
     // Check the permissions 
     int flags = file->flags;  
-    kprintf("%d;%d\n",MATCH_BITMASK(flags, O_RDONLY),MATCH_BITMASK(flags, O_RDWR));
-    if (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR)) { 
+    // (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR))
+    // doesn't work because O_RDONLY is 0
+    if ( MATCH_BITMASK(flags, O_WRONLY) || !MATCH_BITMASK(flags, O_RDWR)) { 
         *errno = EPERM; 
         return -1;  
     } 
@@ -306,8 +307,32 @@ static void uio_init (
 }
  
 /*
+from: kern/arch/mips/locore/trap.c
+void mips_usermode(struct trapframe *tf)
 
-// Commenting out so the code can compile oki
+ * Function for entering user mode.
+ *
+ * This should not be used by threads returning from traps - they
+ * should just return from mips_trap(). It should be used by threads
+ * entering user mode for the first time - whether the child thread in
+ * a fork(), or into a brand-new address space after exec(), or when
+ * starting the first userlevel program.
+ *
+ * It works by jumping into the exception return code.
+ *
+ * mips_usermode is common code for this. It cannot usefully be called
+ * outside the mips port, but should be called from one of the
+ * following places:
+ *    - enter_new_process, for use by exec and equivalent.
+ *    - enter_forked_process, in syscall.c, for use by fork.
+
+
+    int as_copy(struct addrspace *src, struct addrspace **ret);
+ *    as_copy   - create a new address space that is an exact copy of
+ *                an old one. Probably calls as_create to get a new
+ *                empty address space and fill it in, but that's up to
+ *                you.
+ *
 
 pid_t sys_fork(int *errno) { 
     Duplicate proc and assigns it a pid 
@@ -321,6 +346,18 @@ pid_t sys_fork(int *errno) {
     ENPROC	There are already too many processes on the system.
     ENOMEM	Sufficient virtual memory for the new process was not available.
 
+    
+}
+
+int execv(userptr program, char **args, int *errno) { 
+    replace the currently executing program with a newly loaded program image. 
+    Process maintains same process ID 
+    
+
+    // Find the file. 
+    // Check the args, should be terminated by '\0'
+    // copyinstr to copy int argv[] and find int argc 
+    error check argv[argc] == "\0"; 
     
 }
 

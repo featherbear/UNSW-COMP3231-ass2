@@ -98,14 +98,16 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
  * Return NULL on error 
  * TODO: Include this function declaration in "__file_descriptor_table.h"
  * TODO: Not sure if the pointers are right
-struct file_descriptor_table clone_fd() { 
-    struct file_desccriptor_table *new_ft = create_file_table(); 
+struct file_descriptor_table *clone_fdt() { 
+    struct file_desccriptor_table *new_fdt = create_file_table(); 
 
-    FD_LOCK_ACQUIRE() 
-    new_tf->next_fd = curproc->next_fd; 
+    FD_LOCK_ACQUIRE(); 
+    new_fdt->next_fd = curproc->next_fd; 
+    // TODO: How to create a deep copy of an array of pointers 
+    new_fdt->map = curproc->map; // I WISH :<
+    FD_LOCK_RELEASE();
 
-    
-
+    return new_fdt;
 }
 
 */

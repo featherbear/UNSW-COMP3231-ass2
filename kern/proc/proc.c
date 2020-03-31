@@ -324,7 +324,7 @@ proc_setas(struct addrspace *newas)
 
 /*
  * Creates a clone of given proc _src_ with the same fd_table but a different address_space 
- int proc_clone(struct proc *src, struct proc **dest) { 
+ struct proc *proc_clone() { 
 	struct proc *new_process = proc_create_runprogram((char *)<Insert Name>); 
 	
 	// Set the address space 
@@ -334,8 +334,8 @@ proc_setas(struct addrspace *newas)
 
 	// Set the fd_table
 	// TODO: Import #include <__file_descriptor_table.h> HELP 
-	struct file_descriptor_table *fdt_clone; 
-	if (clone_fd(src->fd_table, &ftd_clone) == -1) return -1;
+	struct file_descriptor_table *fdt_clone =  clone_fdt(); 
+	if (fdt_clone == NULL) 
 }
 
  */

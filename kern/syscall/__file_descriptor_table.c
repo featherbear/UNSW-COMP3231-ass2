@@ -93,3 +93,9 @@ int get_open_file_from_fd(fd_t fd, struct open_file **open_file) {
     return 0;
 } 
 
+/*
+ * Create a deep copy of a file_descriptor_table  
+ * TODO: Include this function declaration in "__file_descriptor_table.h"
+int clone_fd(struct file_descriptor_table *src, struct file_descriptor_table **dest)
+
+*/

@@ -323,18 +323,19 @@ proc_setas(struct addrspace *newas)
 }
 
 /*
- * Create a fresh proc for use by runprogram.
- *
- * It will have no address space and will inherit the current
- * process's (that is, the kernel menu's) current directory.
- 
-struct proc *
-proc_create_runprogram(const char *name)
-{
+ * Creates a clone of given proc _src_ with the same fd_table but a different address_space 
+ int proc_clone(struct proc *src, struct proc **dest) { 
+	struct proc *new_process = proc_create_runprogram((char *)<Insert Name>); 
+	
+	// Set the address space 
+	struct addrspace *curProcAs = proc_getas(...); 
+    struct addrspace *newProcAs = as_create(...);  
+    if ((*errno = as_copy(curProcAs, *newProcAs)) != 0) return -1; 
 
-Creates a clone of given proc _src_ with the same fd_table but a different address_space 
-int proc_clone() { 
-	struct proc *clone = proc_create_runprogram()
+	// Have the same fd tabl 
+	// TODO: Import #include <__file_descriptor_table.h> HELP 
+	struct file_descriptor_table *fdt_clone; 
+	if (clone_fd())
 }
 
  */

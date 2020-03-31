@@ -103,7 +103,7 @@ struct addrspace *proc_setas(struct addrspace *);
 /* 
 TODO: 
 Clone a process with different address space but same FD_table
-int proc_clone(struct ); 
+int proc_clone(struct proc *src, struct proc **dest);  
 */
 
 

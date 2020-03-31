@@ -356,7 +356,12 @@ thread_fork(const char *name,
 	    void (*entrypoint)(void *data1, unsigned long data2),
 	    void *data1, 
 		unsigned long data2)
-{
+{ 
+
+1. Don't understand what the entry points are for thread_fork()
+2. Don't understand how trapframe works with everything else 
+3. How do you initialise the FD_TABLE? It's not included in proc_create() in proc.c
+
 
 pid_t sys_fork(struct trapframe *tf, int *errno) { 
 
@@ -370,7 +375,6 @@ pid_t sys_fork(struct trapframe *tf, int *errno) {
         *errno = EMPROC;  // The current user already has too many processes.
         return -1
     }  
-    // Copy the trap frame  (Lowkey don't really udnerstand how the trapframe relates to everything else)
 
     // Create a new process  
     struct proc *new_process;
@@ -379,10 +383,7 @@ pid_t sys_fork(struct trapframe *tf, int *errno) {
         return -1; 
     }
 
-    // Set the address Space 
-    struct addrspace *curProcAs = proc_getas(...); 
-    struct addrspace *newProcAs = as_create(...);  
-    if ((*errno = as_copy(curProcAs, *newProcAs)) != 0) return -1; 
+
 
     // Set the FD_TABLE 
     struct file_descriptor_table *new_fdTable

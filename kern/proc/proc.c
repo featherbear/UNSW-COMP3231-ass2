@@ -323,5 +323,14 @@ proc_setas(struct addrspace *newas)
 }
 
 /* 
- * Make 
+ * Make a copy of proc 
+ * Also copies proc->fd_table 
+
+
+int proc_make_copy (struct proc *src, struct proc **dest ) { 
+
+	
+}
+
  */
+

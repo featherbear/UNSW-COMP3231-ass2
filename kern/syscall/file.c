@@ -371,9 +371,11 @@ pid_t sys_fork(struct trapframe *tf, int *errno) {
     }  
 
     // Create a new process  
-    struct proc *new_process = proc_create("name???? What do we even name it"); 
-    // Maybe we can use this one 
-    int e = proc_clone()
+    struct proc *new_process;
+    int e = proc_clone(currproc, &new_process); // TODO: Write this funct in proc.c
+    if (e) { 
+        return -1; 
+    }
 
     // Set the address Space 
     struct addrspace *curProcAs = proc_getas(...); 

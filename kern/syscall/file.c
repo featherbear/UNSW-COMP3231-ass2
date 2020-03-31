@@ -368,6 +368,9 @@ pid_t sys_fork(struct trapframe *tf, int *errno) {
     // TODO:     ENOMEM	Sufficient virtual memory for the new process was not available.
     
     // Create a copy of trapframe 
+    parent_tf = kmalloc(sizzeof(struct trapframe)); 
+    if (parent_tf == NULL) return ENOMEM; 
+    memcpy(parent_tf, tf, sizeof(struct trapframe)); 
 
     // Check if we still have space for a new process 
     pid_t new_pid = get_pid(); 
@@ -379,20 +382,9 @@ pid_t sys_fork(struct trapframe *tf, int *errno) {
     // Create a new process  
     struct proc *new_process;
     int e = proc_clone(currproc, &new_process); // TODO: Write this funct in proc.c
-    if (e) { 
-        return -1; 
-    }
+    if (e) return -1;
 
-
-
-    // Set the FD_TABLE 
-    struct file_descriptor_table *new_fdTable
-    if ((*errno = create_file_table(*new_fdTable)) == -1) return -1 
-    copy_file_descriptor_table(curproc->fd_table, *new_fdTable)
- // TODO: Need to write this function     
-
-
-    In the parent process, the new pid_t is returned 
+   In the parent process, the new pid_t is returned 
 
     return -1 and set errno 
      

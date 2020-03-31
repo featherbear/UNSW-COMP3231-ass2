@@ -100,5 +100,11 @@ struct addrspace *proc_getas(void);
 /* Change the address space of the current process, and return the old one. */
 struct addrspace *proc_setas(struct addrspace *);
 
+/* 
+TODO: 
+Clone a process with different address space but same FD_table
+int proc_clone(struct ); 
+*/
+
 
 #endif /* _PROC_H_ */

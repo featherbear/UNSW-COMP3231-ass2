@@ -361,7 +361,8 @@ thread_fork(const char *name,
 pid_t sys_fork(struct trapframe *tf, int *errno) { 
 
     // TODO:     ENOMEM	Sufficient virtual memory for the new process was not available.
-
+    
+    // Create a copy of trapframe 
 
     // Check if we still have space for a new process 
     pid_t new_pid = get_pid(); 
@@ -369,6 +370,7 @@ pid_t sys_fork(struct trapframe *tf, int *errno) {
         *errno = EMPROC;  // The current user already has too many processes.
         return -1
     }  
+    // Copy the trap frame  (Lowkey don't really udnerstand how the trapframe relates to everything else)
 
     // Create a new process  
     struct proc *new_process;

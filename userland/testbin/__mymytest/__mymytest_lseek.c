@@ -18,6 +18,10 @@ void test_lseek() {
     fd = open("test_lseek", O_RDWR | O_CREAT);
     _assert(fd != -1);
 
+    char writeBuff[] = "-----1----0----1----2";
+    write(fd, writeBuff, sizeof(writeBuff));
+
+
     test(test_lseek__set);
     test(test_lseek__cur);
     test(test_lseek__end);
@@ -33,27 +37,29 @@ void test_lseek() {
 
 static void test_lseek__set() {
 
-    _assert(lseek(fd, 10, SEEK_SET) == 0);
+    _assert(lseek(fd, 10, SEEK_SET) == 10);
     _assert(read(fd, &buff, 1) == 1);
     _assert(buff == '0'); // Offset 10 should have '0' (ASCII 30)
 
     return;
 }
 static void test_lseek__cur() {
+    printf("%d\n", lseek(fd, -1, SEEK_END));
+    _assert(lseek(fd, -1, SEEK_END) == 20);
 
-    _assert(lseek(fd, 10, SEEK_SET) == 0);  // First set to offset 10
-
-    _assert(lseek(fd, 5, SEEK_CUR) == 0);   // Increase offset by 5 (Offset now 15)
-    _assert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
-    _assert(buff == '1');                    // Offset 15 should have '1' (ASCII 35)
-
-    _assert(lseek(fd, -11, SEEK_CUR) == 0); // Decrease offset by 11 (Offset now 5)
-    _assert(read(fd, &buff, 1) == 1);       // Read 1 byte (Offset now 16)
-    _assert(buff == '1');                    // Offset 5 should have '1' (ASCII 35)
+    _assert(read(fd, &buff, 1) == 1);        // Read 1 byte (Offset now 16)
+    _assert(buff == '2');                    // Offset 15 should have '1' (ASCII 35)
 
     return;
 }
 static void test_lseek__end() {
+    _assert(lseek(fd, 10, SEEK_SET) == 10);  // First set to offset 10
+
+    _assert(lseek(fd, 5, SEEK_CUR) == 15);   // Increase offset by 5 (Offset now 15)
+    _assert(read(fd, &buff, 1) == 1);        // Read 1 byte (Offset now 16)
+    _assert(buff == '1');                    // Offset 15 should have '1' (ASCII 35)
+
+
     return;
 }
 static void test_lseek__nonexistent_fd() {

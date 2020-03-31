@@ -69,7 +69,8 @@ static void test_read__emptyString() {
     return;
 }
 static void test_read__readBeyondFile() {
-    fd = open(TEST_FILENAME, O_RDONLY, TEST_MODE); 
+    fd = open(TEST_FILENAME, O_RDONLY, TEST_MODE);
+    lseek(fd, 2, SEEK_END);
     _assert(read(fd, &buf[0], TEST_LENGTH_GT_MAX) == 0);
     close(fd); 
     return;

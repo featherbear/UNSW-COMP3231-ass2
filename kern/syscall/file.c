@@ -138,17 +138,14 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // Get the file 
     struct open_file *file; 
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) {
-        kprintf("OPEN_FD FAIL\n");
         return -1;
     }
     // Check the permissions 
     int flags = file->flags;
-    kprintf("%d --\n", flags);  
     // (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR))
     // doesn't work because O_RDONLY is 0
     if ( ((flags & O_ACCMODE) != O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR)) { 
         *errno = EBADF; 
-        kprintf("RET: EBADF\n");
         return -1;  
     } 
 
@@ -160,14 +157,12 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     lock_acquire(file->lock); 
     if ((*errno = VOP_READ(file->vnode, &new_uio)) != 0) { 
         lock_release(file->lock); 
-        kprintf("VOP_READ_FAIL\n");
         return -1; 
     } 
  
     off_t change = new_uio.uio_offset - file->offset;
     file->offset = new_uio.uio_offset;
 
-    kprintf("CHANGE %d\n", (int) change);
     lock_release(file->lock);
 
     /*
@@ -237,7 +232,9 @@ off_t sys_lseek(fd_t fd, off_t pos, int whence, int *errno) {
 
     // Get `open_file` 
     struct open_file *open_file;
-    if ((*errno = get_open_file_from_fd(fd, &open_file)) != 0) return -1;
+    if ((*errno = get_open_file_from_fd(fd, &open_file)) != 0) {
+        return -1;
+    }
 
     // Check if file seekable
     if (!VOP_ISSEEKABLE(open_file->vnode)) {
@@ -342,6 +339,11 @@ void mips_usermode(struct trapframe *tf)
  *
 
 pid_t sys_fork(int *errno) { 
+
+    // Create a new process  
+    struct proc *new_process = proc_create("name???? What do we even name it"); 
+
+    // Set the address Space 
     Duplicate proc and assigns it a pid 
     So need to decipher a system to manage the different pids
     File hand objects in the table are shared so proc->fd_table == new_proc->fd_ta

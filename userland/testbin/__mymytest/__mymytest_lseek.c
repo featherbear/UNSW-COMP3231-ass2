@@ -13,12 +13,13 @@ static void test_lseek__invalidOffset(void); // EINVAL (Resulting seek position 
 
 int fd;
 char buff;
+char writeBuff[22] = "-----1----0----1----2";
+
 
 void test_lseek() {
     fd = open("test_lseek", O_RDWR | O_CREAT);
     _assert(fd != -1);
 
-    char writeBuff[] = "-----1----0----1----2";
     write(fd, writeBuff, sizeof(writeBuff));
 
 
@@ -44,21 +45,19 @@ static void test_lseek__set() {
     return;
 }
 static void test_lseek__cur() {
-    printf("%d\n", lseek(fd, -1, SEEK_END));
-    _assert(lseek(fd, -1, SEEK_END) == 20);
-
-    _assert(read(fd, &buff, 1) == 1);        // Read 1 byte (Offset now 16)
-    _assert(buff == '2');                    // Offset 15 should have '1' (ASCII 35)
-
-    return;
-}
-static void test_lseek__end() {
     _assert(lseek(fd, 10, SEEK_SET) == 10);  // First set to offset 10
 
     _assert(lseek(fd, 5, SEEK_CUR) == 15);   // Increase offset by 5 (Offset now 15)
     _assert(read(fd, &buff, 1) == 1);        // Read 1 byte (Offset now 16)
-    _assert(buff == '1');                    // Offset 15 should have '1' (ASCII 35)
+    _assert(buff == '1');                    // Offset 15 should have '2' (ASCII 32)
 
+    return;
+}
+static void test_lseek__end() {
+    _assert(lseek(fd, -2, SEEK_END) == 20);  // Get to offset 20
+
+    _assert(read(fd, &buff, 1) == 1);        // Read 1 byte (Offset now 21) (end byte)
+    _assert(buff == '2');                    // Offset 20 should have '1' (ASCII 31)
 
     return;
 }
@@ -106,17 +105,18 @@ static void test_lseek__invalidWhence() {
 static void test_lseek__invalidOffset() {
     // Check invalid negative offset
 
-    _assert(lseek(fd, 0, SEEK_SET) == 0); // First set the file to an offset of 0
+    _assert(lseek(fd, 0, SEEK_SET) == 0);   // First set the file to an offset of 0
     _assert(lseek(fd, -1, SEEK_SET) == -1);
     _assert(errno == EINVAL);
     _assert(lseek(fd, -1, SEEK_CUR) == -1);
     _assert(errno == EINVAL);
 
-    _assert(lseek(fd, 10, SEEK_SET) == 0); // First set the file to an offset of 0
+    _assert(lseek(fd, 10, SEEK_SET) == 10); // Set the file to an offset of 10
     _assert(lseek(fd, -11, SEEK_CUR) == -1);
     _assert(errno == EINVAL);
 
-    // TODO: Check SEEK_END?
+    _assert(lseek(fd, -(sizeof(writeBuff) + 1), SEEK_END) == -1);
+    _assert(errno == EINVAL);
 
     return;
 }

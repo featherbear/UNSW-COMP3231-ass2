@@ -340,10 +340,22 @@ void mips_usermode(struct trapframe *tf)
 
 pid_t sys_fork(int *errno) { 
 
+    // Check if we still have space for a new process 
+    pid_t new_pid; 
+    if ((new_pid = get_pid()) == -1) == -1) { 
+        *errno
+    }  
+
     // Create a new process  
     struct proc *new_process = proc_create("name???? What do we even name it"); 
 
     // Set the address Space 
+    struct addrspace *curProcAs = proc_getas(...); 
+    struct addrspace *newProcAs = as_create(...);  
+    if ((*errno = as_copy(curProcAs, *newProcAs)) != 0) return -1; 
+
+
+
     Duplicate proc and assigns it a pid 
     So need to decipher a system to manage the different pids
     File hand objects in the table are shared so proc->fd_table == new_proc->fd_ta

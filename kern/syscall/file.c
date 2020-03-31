@@ -32,17 +32,20 @@ fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) {
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
  
     char *k_filename = kmalloc(PATH_MAX); 
-    // TODO: Check if allocated
+    if (k_filename == NULL) { 
+        *errno = ENOMEM; // Memory Allocation Failed
+        return -1; 
+    }
 
     if ((*errno = copyinstr(filename, k_filename, PATH_MAX, NULL)) != 0) {
-        // TODO: free memory
+        kfree(k_filename); 
         return -1; 
     }
  
     // Create a new `struct open_file`
     struct open_file *open_file = create_open_file();
     if ((*errno = vfs_open(k_filename, flags, mode, &open_file->vnode))) {
-        // TODO: free memory
+        kfree(k_filename); 
         return -1;  
     }
     kfree(k_filename); 

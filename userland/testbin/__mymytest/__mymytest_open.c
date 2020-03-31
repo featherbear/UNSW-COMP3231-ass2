@@ -50,18 +50,22 @@ static void test_open__nonexistent_file() {
 
 static void test_open__filetable_full() {
 
-    int fd_max_reached = false; 
     int opened_fds[OPEN_MAX] = { 0 };
 
-    for (int i = 3; i < OPEN_MAX; i++) { 
-        _assert((opened_fds[i] = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE)) == i);          
-    }
+    for (int i = 3; i < OPEN_MAX; i++) assert((opened_fds[i] = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE)) != -1);          
+    _assert("Occupy OPEN_MAX - 3 file descriptors");
+
+    _assert(open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE) == -1);
 
     // Close all the opened files
     for (int i = 3; i < OPEN_MAX; i++) { 
         if (opened_fds[i] != 0) close(i); 
     }
+
+    // Check that after all files were closed, another file can be opened
+    int fd;
+    _assert((fd = open(TEST_VALID_FILENAME, O_RDWR | O_CREAT, TEST_MODE)) != -1);
+    close(fd);
     
-    _assert(fd_max_reached == true); 
     return;
 }

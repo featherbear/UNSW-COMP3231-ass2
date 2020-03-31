@@ -321,22 +321,3 @@ proc_setas(struct addrspace *newas)
 	spinlock_release(&proc->p_lock);
 	return oldas;
 }
-
-/*
- * Creates a clone of given proc _src_ with the same fd_table but a different address_space 
- struct proc *proc_clone() { 
-	struct proc *new_process = proc_create_runprogram((char *)<Insert Name>); 
-	
-	// Set the address space 
-	struct addrspace *curProcAs = proc_getas(...); 
-    struct addrspace *newProcAs = as_create(...);  
-    if ((*errno = as_copy(curProcAs, *newProcAs)) != 0) return -1; 
-
-	// Set the fd_table
-	// TODO: Import #include <__file_descriptor_table.h> HELP 
-	struct file_descriptor_table *fdt_clone =  clone_fdt(); 
-	if (fdt_clone == NULL)
-}
-
- */
-

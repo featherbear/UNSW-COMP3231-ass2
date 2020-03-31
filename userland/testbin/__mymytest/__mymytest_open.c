@@ -10,7 +10,7 @@
 
 #define TEST_VALID_FILENAME "test.file"
 #define TEST_MISSING_FILENAME "random.file"
-#define INVALID_FLAG 1234
+#define INVALID_FLAG 4 // Flag needs one of O_RDONLY, O_WRONLY, or O_RDWR
 #define TEST_MODE 0700
 
 static void test_open__noFlagsProvided(void); // EINVAL

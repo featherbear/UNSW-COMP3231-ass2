@@ -27,6 +27,11 @@ static void uio_init (struct iovec *iov, struct uio *uio, userptr_t buf, size_t 
 
 fd_t sys_open(userptr_t filename, int flags, mode_t mode, int *errno) { 
 
+    if ((flags & O_ACCMODE) == 0) {
+        *errno = EINVAL;
+        return -1;
+    } 
+
     // Find an empty file descriptor number
     fd_t fd;
     if ((*errno = get_free_fd(&fd)) != 0) return -1;
@@ -135,6 +140,7 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 
     // Check the permissions 
     int flags = file->flags;  
+    kprintf("%d;%d\n",MATCH_BITMASK(flags, O_RDONLY),MATCH_BITMASK(flags, O_RDWR));
     if (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR)) { 
         *errno = EPERM; 
         return -1;  
@@ -185,7 +191,7 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
 int sys_write(fd_t fd, userptr_t buf, size_t buflen, int *errno) {  
     
     // TODO: EPERM - An append-only flag is set on the file, but the caller is attempting to write before the current end of file.
-
+// How would you know if Lseek has been called hm
     // Get the file 
     struct open_file *file; 
     if ((*errno = get_open_file_from_fd(fd, &file)) != 0) return -1;
@@ -298,4 +304,28 @@ static void uio_init (
             .uio_space = proc_getas() // TODO: FIXME:
     };
 }
+ 
+/*
 
+// Commenting out so the code can compile oki
+
+pid_t sys_fork(int *errno) { 
+    Duplicate proc and assigns it a pid 
+    So need to decipher a system to manage the different pids
+    File hand objects in the table are shared so proc->fd_table == new_proc->fd_ta
+    In the child process, 0 is returned
+    In the parent process, the new pid_t is returned 
+
+    return -1 and set errno 
+    EMPROC	The current user already has too many processes.
+    ENPROC	There are already too many processes on the system.
+    ENOMEM	Sufficient virtual memory for the new process was not available.
+
+    
+}
+
+
+
+
+
+*/

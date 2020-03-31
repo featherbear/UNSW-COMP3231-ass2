@@ -143,7 +143,7 @@ int sys_read(fd_t fd, userptr_t buf, size_t buflen, int *errno) {
     // (!MATCH_BITMASK(flags, O_RDONLY) && !MATCH_BITMASK(flags, O_RDWR))
     // doesn't work because O_RDONLY is 0
     if ( MATCH_BITMASK(flags, O_WRONLY) || !MATCH_BITMASK(flags, O_RDWR)) { 
-        *errno = EPERM; 
+        *errno = EBADF; 
         return -1;  
     } 
 
@@ -358,7 +358,17 @@ int execv(userptr program, char **args, int *errno) {
     // Check the args, should be terminated by '\0'
     // copyinstr to copy int argv[] and find int argc 
     error check argv[argc] == "\0"; 
-    
+
+
+ 	ENODEV	The device prefix of program did not exist.
+    ENOTDIR	A non-final component of program was not a directory.
+    ENOENT	program did not exist.
+    EISDIR	program is a directory.
+    ENOEXEC	program is not in a recognizable executable file format, was for the wrong platform, or contained invalid fields.
+    ENOMEM	Insufficient virtual memory is available.
+    E2BIG	The total size of the argument strings exceeeds ARG_MAX.
+    EIO	A hard I/O error occurred.
+    EFAULT	One of the arguments is an invalid pointer.
 }
 
 

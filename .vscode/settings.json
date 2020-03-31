@@ -16,6 +16,8 @@
         "cstdlib": "c",
         "memory": "c",
         "seek.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "__mymytest.h": "c",
+        "stdio.h": "c"
     }
 }

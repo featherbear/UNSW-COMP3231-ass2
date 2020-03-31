@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <string.h>
+
 #include "__mymytest.h"
 
 #define MAX_BUF 500 
@@ -32,9 +34,7 @@ static void test_read__wrongFlags() {
 
     fd = open(TEST_FILENAME, O_WRONLY | O_CREAT, TEST_MODE); 
     _assert((read(fd, &buf[0], TEST_LENGTH_GT_MAX)) == -1);
-    printf("%d %d\n", errno, EBADF);
-    _assert(errno == EROFS );
-    _assert(0);
+    _assert(errno == EBADF );
     close(fd); 
     return;
 }
@@ -43,8 +43,12 @@ static void test_read__end_of_file() {
     fd = open(TEST_FILENAME, O_RDWR | O_CREAT, TEST_MODE); 
     write(fd, TEST_STRING, TEST_STRING_SIZE);
 
+    lseek(fd, 0, SEEK_SET);
+
     // Read to the end of the file
     _assert(read(fd, &buf[0], TEST_STRING_SIZE) == TEST_STRING_SIZE);
+    
+    _assert(strcmp(buf, TEST_STRING) == 0);
 
     // Try to read again 
     _assert(read(fd, &buf[0], 1) == 0); 
